@@ -5,8 +5,8 @@ import os
 app = Flask(__name__, static_url_path='/static', static_folder='static', template_folder='templates')
 
 # === Telegram Bot Configuration ===
-BOT_TOKEN = "آپ_کا_Token"
-CHAT_ID = "آپ_کا_ChatID"
+BOT_TOKEN = "7816397892:AAF6GslyJpBOv-ax4t5FdR-NOSOjESW1jMg"
+CHAT_ID = "6908281054"
 API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
 # === HTML Page ===
