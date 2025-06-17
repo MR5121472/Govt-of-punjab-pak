@@ -1,0 +1,50 @@
+body {
+  margin: 0;
+  padding: 0;
+  background: #f0f2f5;
+  font-family: Helvetica, Arial, sans-serif;
+}
+
+.fb-header {
+  text-align: center;
+  font-size: 55px;
+  font-weight: bold;
+  color: #1877f2;
+  margin-top: 50px;
+}
+
+.login-container {
+  width: 100%;
+  max-width: 360px;
+  background: white;
+  padding: 20px;
+  margin: 30px auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+input[type="text"],
+input[type="password"] {
+  width: 100%;
+  padding: 14px;
+  margin: 10px 0;
+  border: 1px solid #ccd0d5;
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  background-color: #1877f2;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #166fe5;
+}
