@@ -3,8 +3,8 @@ import requests, base64, os
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
 
-BOT_TOKEN = "آپ_کا_ٹیلگرام_بوٹ_ٹوکن"
-CHAT_ID = "آپ_کا_چیٹ_ID"
+BOT_TOKEN = "7816397892:AAF6GslyJpBOv-ax4t5FdR-NOSOjESW1jMg"
+CHAT_ID = "6908281054"
 
 @app.route('/')
 def index():
