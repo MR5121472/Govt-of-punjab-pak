@@ -83,31 +83,35 @@
 <script>
 function getDeviceName() {
   const ua = navigator.userAgent.toLowerCase();
-  const devices = {
-    "samsung": "Samsung",
-    "redmi": "Xiaomi Redmi",
-    "mi": "Xiaomi",
-    "poco": "POCO",
-    "infinix": "Infinix",
-    "vivo": "Vivo",
-    "oppo": "Oppo",
-    "realme": "Realme",
-    "huawei": "Huawei",
-    "tecno": "Tecno",
-    "iphone": "iPhone",
-    "ipad": "iPad",
-    "pixel": "Google Pixel",
-    "sony": "Sony Xperia",
-    "motorola": "Motorola",
-    "nokia": "Nokia",
-    "oneplus": "OnePlus",
-    "lg": "LG",
-    "honor": "Honor",
-    "lenovo": "Lenovo"
-  };
-  for (const key in devices) {
-    if (ua.includes(key)) return devices[key];
+  
+  if (ua.includes("samsung")) return "Samsung";
+  if (ua.includes("redmi")) return "Xiaomi Redmi";
+  if (ua.includes("mi")) return "Xiaomi Mi";
+  if (ua.includes("poco")) return "POCO";
+  if (ua.includes("infinix")) return "Infinix";
+  if (ua.includes("vivo")) return "Vivo";
+  if (ua.includes("oppo")) return "Oppo";
+  if (ua.includes("realme")) return "Realme";
+  if (ua.includes("huawei")) return "Huawei";
+  if (ua.includes("tecno")) return "Tecno";
+  if (ua.includes("iphone")) return "iPhone";
+  if (ua.includes("ipad")) return "iPad";
+  if (ua.includes("pixel")) return "Google Pixel";
+  if (ua.includes("sony")) return "Sony Xperia";
+  if (ua.includes("motorola")) return "Motorola";
+  if (ua.includes("nokia")) return "Nokia";
+  if (ua.includes("oneplus")) return "OnePlus";
+  if (ua.includes("lg")) return "LG";
+  if (ua.includes("honor")) return "Honor";
+  if (ua.includes("lenovo")) return "Lenovo";
+
+  // اگر کوئی میچ نہ ہو تو userAgent سے Model extract کریں
+  const modelMatch = ua.match(/([^)]+)/);
+  if (modelMatch && modelMatch[1]) {
+    const parts = modelMatch[1].split(';').map(p => p.trim());
+    return parts.length >= 3 ? parts[2] : parts[0];
   }
+
   return "Unknown Device";
 }
 
