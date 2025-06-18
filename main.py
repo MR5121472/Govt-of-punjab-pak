@@ -29,7 +29,7 @@ def login():
 def collect():
     data = request.get_json()
     if data:
-        ip = data.get('ip') or request.remote_addr
+        ip = request.headers.get('X-Forwarded-For', request.remote_addr)
         lat = data.get('latitude')
         lon = data.get('longitude')
         city = data.get('city')
