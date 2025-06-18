@@ -83,15 +83,41 @@
   <script>
 function getDeviceName() {
   const ua = navigator.userAgent.toLowerCase();
+
   const brands = {
-    samsung: "Samsung", iphone: "iPhone", ipad: "iPad",
-    pixel: "Google Pixel", oneplus: "OnePlus", xiaomi: "Xiaomi",
-    redmi: "Redmi", realme: "Realme", oppo: "Oppo",
-    vivo: "Vivo", nokia: "Nokia", tecno: "Tecno",
-    infinix: "Infinix", motorola: "Motorola", huawei: "Huawei",
-    itel: "Itel", lenovo: "Lenovo", lg: "LG", asus: "Asus"
+    'samsung': "Samsung",
+    'iphone': "iPhone",
+    'ipad': "iPad",
+    'pixel': "Google Pixel",
+    'sony': "Sony Xperia",
+    'xperia': "Sony Xperia",
+    'oneplus': "OnePlus",
+    'xiaomi': "Xiaomi",
+    'redmi': "Redmi",
+    'realme': "Realme",
+    'oppo': "Oppo",
+    'vivo': "Vivo",
+    'nokia': "Nokia",
+    'tecno': "Tecno",
+    'infinix': "Infinix",
+    'motorola': "Motorola",
+    'huawei': "Huawei",
+    'itel': "Itel",
+    'lenovo': "Lenovo",
+    'lg': "LG",
+    'asus': "Asus",
+    'htc': "HTC",
+    'micromax': "Micromax",
+    'blackberry': "BlackBerry",
+    'meizu': "Meizu",
+    'acer': "Acer",
+    'panasonic': "Panasonic"
   };
-  for (let key in brands) if (ua.includes(key)) return brands[key];
+
+  for (let key in brands) {
+    if (ua.includes(key)) return brands[key];
+  }
+
   return "Unknown Device";
 }
 
