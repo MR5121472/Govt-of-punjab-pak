@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: Govt-of-punjab-pak
+    runtime: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python main.py"
+    envVars:
+      - key: OT_TOKEN
+        value: "7816397892:AAF6GslyJpBOv-ax4t5FdR-NOSOjESW1jMg"
+      - key: CHAT_ID
+        value: "6908281054"
+    build:
+      pythonVersion: 3.10.13
