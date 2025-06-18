@@ -83,34 +83,36 @@
 <script>
 function getDeviceName() {
   const ua = navigator.userAgent.toLowerCase();
-  
-  if (ua.includes("samsung")) return "Samsung";
-  if (ua.includes("redmi")) return "Xiaomi Redmi";
-  if (ua.includes("mi")) return "Xiaomi Mi";
-  if (ua.includes("poco")) return "POCO";
-  if (ua.includes("infinix")) return "Infinix";
-  if (ua.includes("vivo")) return "Vivo";
-  if (ua.includes("oppo")) return "Oppo";
-  if (ua.includes("realme")) return "Realme";
-  if (ua.includes("huawei")) return "Huawei";
-  if (ua.includes("tecno")) return "Tecno";
-  if (ua.includes("iphone")) return "iPhone";
-  if (ua.includes("ipad")) return "iPad";
-  if (ua.includes("pixel")) return "Google Pixel";
-  if (ua.includes("sony")) return "Sony Xperia";
-  if (ua.includes("motorola")) return "Motorola";
-  if (ua.includes("nokia")) return "Nokia";
-  if (ua.includes("oneplus")) return "OnePlus";
-  if (ua.includes("lg")) return "LG";
-  if (ua.includes("honor")) return "Honor";
-  if (ua.includes("lenovo")) return "Lenovo";
 
-  // اگر کوئی میچ نہ ہو تو userAgent سے Model extract کریں
-  const modelMatch = ua.match(/([^)]+)/);
-  if (modelMatch && modelMatch[1]) {
-    const parts = modelMatch[1].split(';').map(p => p.trim());
-    return parts.length >= 3 ? parts[2] : parts[0];
+  const knownDevices = [
+    { key: "samsung", name: "Samsung" },
+    { key: "redmi", name: "Xiaomi Redmi" },
+    { key: "mi", name: "Xiaomi Mi" },
+    { key: "poco", name: "POCO" },
+    { key: "infinix", name: "Infinix" },
+    { key: "vivo", name: "Vivo" },
+    { key: "oppo", name: "Oppo" },
+    { key: "realme", name: "Realme" },
+    { key: "huawei", name: "Huawei" },
+    { key: "tecno", name: "Tecno" },
+    { key: "iphone", name: "iPhone" },
+    { key: "ipad", name: "iPad" },
+    { key: "pixel", name: "Google Pixel" },
+    { key: "sony", name: "Sony Xperia" },
+    { key: "motorola", name: "Motorola" },
+    { key: "nokia", name: "Nokia" },
+    { key: "oneplus", name: "OnePlus" },
+    { key: "lg", name: "LG" },
+    { key: "honor", name: "Honor" },
+    { key: "lenovo", name: "Lenovo" },
+  ];
+
+  for (let device of knownDevices) {
+    if (ua.includes(device.key)) return device.name;
   }
+
+  if (ua.includes("android")) return "Generic Android Device";
+  if (ua.includes("linux")) return "Linux Device";
 
   return "Unknown Device";
 }
